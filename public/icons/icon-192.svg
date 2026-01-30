@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#gradient)"/>
+  <g fill="white" transform="translate(32, 32)">
+    <!-- Camera icon -->
+    <path d="M32 24h12.8l6.4-9.6A4.8 4.8 0 0155.2 12h17.6a4.8 4.8 0 014 2.4L83.2 24H96a9.6 9.6 0 019.6 9.6v57.6a9.6 9.6 0 01-9.6 9.6H32a9.6 9.6 0 01-9.6-9.6V33.6A9.6 9.6 0 0132 24z"/>
+    <circle cx="64" cy="60" r="20" fill="#10b981"/>
+    <!-- Location pin -->
+    <path d="M64 48a20 20 0 00-20 20c0 16 20 32 20 32s20-16 20-32a20 20 0 00-20-20z" fill="white" opacity="0.9"/>
+    <circle cx="64" cy="68" r="6" fill="#10b981"/>
+  </g>
+</svg>

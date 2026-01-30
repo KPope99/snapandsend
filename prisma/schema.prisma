@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String      @id @default(cuid())
+  email       String?     @unique
+  password    String?
+  displayName String?
+  avatarUrl   String?
+  reports     Report[]
+  agreements  Agreement[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Report {
+  id             String      @id @default(cuid())
+  userId         String?
+  user           User?       @relation(fields: [userId], references: [id])
+  sessionId      String?
+  title          String
+  description    String
+  category       String
+  images         Image[]
+  latitude       Float
+  longitude      Float
+  address        String?
+  status         String      @default("pending")
+  agreements     Agreement[]
+  agreementCount Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([latitude, longitude])
+  @@index([status])
+  @@index([category])
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  createdAt DateTime @default(now())
+
+  @@index([reportId])
+}
+
+model Agreement {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  sessionId String?
+  latitude  Float
+  longitude Float
+  distance  Float
+  createdAt DateTime @default(now())
+
+  @@unique([reportId, userId])
+  @@unique([reportId, sessionId])
+  @@index([reportId])
+}
+
+// External API Integration Models
+
+model ApiPartner {
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  apiKey      String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  webhooks    Webhook[]
+  statusLogs  StatusLog[]
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([apiKey])
+}
+
+model Webhook {
+  id        String   @id @default(cuid())
+  partnerId String
+  partner   ApiPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  url       String
+  events    String   // JSON array of event types
+  secret    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([partnerId])
+}
+
+model StatusLog {
+  id             String     @id @default(cuid())
+  reportId       String
+  previousStatus String
+  newStatus      String
+  notes          String?
+  changedBy      String
+  partnerId      String?
+  partner        ApiPartner? @relation(fields: [partnerId], references: [id])
+  createdAt      DateTime   @default(now())
+
+  @@index([reportId])
+}
