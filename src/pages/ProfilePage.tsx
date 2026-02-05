@@ -99,6 +99,11 @@ export function ProfilePage() {
               <p>Report community issues and help improve your neighbourhood.</p>
             </CardContent>
           </Card>
+
+          {/* Copyright */}
+          <div className="text-center text-xs text-gray-500 mt-4">
+            © Tech84
+          </div>
         </main>
       </div>
     );
@@ -176,6 +181,11 @@ export function ProfilePage() {
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>You can use SnapAndSend without an account.</p>
           <p>Creating an account lets you manage your reports across devices.</p>
+        </div>
+
+        {/* Copyright */}
+        <div className="text-center text-xs text-gray-500 mt-6">
+          © Tech84
         </div>
       </main>
     </div>

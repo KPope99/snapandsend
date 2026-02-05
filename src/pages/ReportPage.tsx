@@ -363,6 +363,11 @@ export function ReportPage() {
             )}
           </div>
         )}
+
+        {/* Copyright */}
+        <div className="text-center text-xs text-gray-500 mt-6 mb-4">
+          © Tech84
+        </div>
       </main>
     </div>
   );

@@ -111,6 +111,11 @@ export function MyReportsPage() {
           {myReports.length} report{myReports.length !== 1 ? 's' : ''}
         </div>
       )}
+
+      {/* Copyright */}
+      <div className="bg-gray-100 px-4 py-2 text-center text-xs text-gray-500">
+        © Tech84
+      </div>
     </div>
   );
 }

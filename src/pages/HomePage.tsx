@@ -130,6 +130,11 @@ export function HomePage() {
       <div className="bg-emerald-50 px-4 py-2 text-center text-sm text-emerald-700">
         {reports.length} reports in your area
       </div>
+
+      {/* Copyright */}
+      <div className="bg-gray-100 px-4 py-2 text-center text-xs text-gray-500">
+        © Tech84
+      </div>
     </div>
   );
 }

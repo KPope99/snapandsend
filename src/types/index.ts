@@ -51,7 +51,6 @@ export type ReportCategory =
   | 'pothole'
   | 'garbage'
   | 'vandalism'
-  | 'streetlight'
   | 'drainage'
   | 'signage'
   | 'robbery'
@@ -89,7 +88,6 @@ export const CATEGORIES: { value: ReportCategory; label: string; icon: string }[
   { value: 'pothole', label: 'Pothole', icon: '🕳️' },
   { value: 'garbage', label: 'Garbage', icon: '🗑️' },
   { value: 'vandalism', label: 'Vandalism', icon: '🎨' },
-  { value: 'streetlight', label: 'Streetlight', icon: '💡' },
   { value: 'drainage', label: 'Drainage', icon: '🌊' },
   { value: 'signage', label: 'Signage', icon: '🚧' },
   { value: 'robbery', label: 'Robbery', icon: '🚨' },
