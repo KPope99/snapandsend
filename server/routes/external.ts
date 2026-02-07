@@ -138,7 +138,11 @@ router.get('/incidents', async (req: Request, res: Response) => {
       })),
       verificationCount: incident._count.agreements,
       createdAt: incident.createdAt,
-      updatedAt: incident.updatedAt
+      updatedAt: incident.updatedAt,
+      investigatingAt: incident.investigatingAt,
+      resolvedAt: incident.resolvedAt,
+      resolutionNotes: incident.resolutionNotes,
+      resolutionEvidence: incident.resolutionEvidence
     }));
 
     res.json({
@@ -226,7 +230,11 @@ router.get('/incidents/:id', async (req: Request, res: Response) => {
         })),
         verificationCount: incident.agreements.length,
         createdAt: incident.createdAt,
-        updatedAt: incident.updatedAt
+        updatedAt: incident.updatedAt,
+        investigatingAt: incident.investigatingAt,
+        resolvedAt: incident.resolvedAt,
+        resolutionNotes: incident.resolutionNotes,
+        resolutionEvidence: incident.resolutionEvidence
       }
     });
   } catch (error) {
@@ -249,7 +257,7 @@ router.get('/incidents/:id', async (req: Request, res: Response) => {
 router.patch('/incidents/:id/status', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { status, notes } = req.body;
+    const { status, notes, evidenceUrl } = req.body;
     const partner = (req as any).partner;
 
     const validStatuses = ['pending', 'verified', 'resolved', 'investigating'];
@@ -271,10 +279,27 @@ router.patch('/incidents/:id/status', async (req: Request, res: Response) => {
       });
     }
 
+    // Prepare update data with timestamps
+    const updateData: any = { status };
+
+    // Set timestamp based on new status
+    if (status === 'investigating' && incident.status !== 'investigating') {
+      updateData.investigatingAt = new Date();
+    }
+    if (status === 'resolved' && incident.status !== 'resolved') {
+      updateData.resolvedAt = new Date();
+      if (notes) {
+        updateData.resolutionNotes = notes;
+      }
+      if (evidenceUrl) {
+        updateData.resolutionEvidence = evidenceUrl;
+      }
+    }
+
     // Update status
     const updatedIncident = await prisma.report.update({
       where: { id },
-      data: { status }
+      data: updateData
     });
 
     // Log the status change
