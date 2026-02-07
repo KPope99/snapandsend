@@ -106,7 +106,12 @@ export async function getReport(id: string): Promise<Report> {
   return response.json();
 }
 
-export async function createReport(data: CreateReportData): Promise<Report> {
+export interface CreateReportResponse extends Report {
+  merged?: boolean;
+  mergeMessage?: string;
+}
+
+export async function createReport(data: CreateReportData): Promise<CreateReportResponse> {
   const response = await fetch(`${API_BASE}/reports`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

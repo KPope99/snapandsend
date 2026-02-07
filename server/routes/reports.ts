@@ -87,7 +87,10 @@ router.get('/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Create new report
+// Duplicate detection radius in meters (reports within this distance are considered duplicates)
+const DUPLICATE_DETECTION_RADIUS = 200; // 200 meters
+
+// Create new report (with automatic duplicate detection)
 router.post('/', async (req: Request, res: Response) => {
   try {
     const {
@@ -110,6 +113,112 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'At least one image is required' });
     }
 
+    // Check for existing similar reports (same category, nearby location, not resolved)
+    const existingReports = await prisma.report.findMany({
+      where: {
+        category,
+        status: { not: 'resolved' }
+      },
+      include: {
+        images: true,
+        user: {
+          select: { id: true, displayName: true, avatarUrl: true }
+        },
+        _count: {
+          select: { agreements: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Find a duplicate within the detection radius
+    let duplicateReport = null;
+    let duplicateDistance = 0;
+
+    for (const report of existingReports) {
+      const distance = getDistance(latitude, longitude, report.latitude, report.longitude);
+      if (distance <= DUPLICATE_DETECTION_RADIUS) {
+        // Check if this user/session hasn't already reported or agreed to this
+        const isOriginalReporter = (userId && report.userId === userId) ||
+                                   (sessionId && report.sessionId === sessionId);
+
+        if (!isOriginalReporter) {
+          // Check if already agreed
+          const existingAgreement = await prisma.agreement.findFirst({
+            where: {
+              reportId: report.id,
+              OR: [
+                { userId: userId || undefined },
+                { sessionId: sessionId || undefined }
+              ]
+            }
+          });
+
+          if (!existingAgreement) {
+            duplicateReport = report;
+            duplicateDistance = distance;
+            break;
+          }
+        }
+      }
+    }
+
+    // If duplicate found, add as verification instead of creating new report
+    if (duplicateReport) {
+      // Create agreement (verification) for the existing report
+      await prisma.agreement.create({
+        data: {
+          reportId: duplicateReport.id,
+          userId: userId || null,
+          sessionId: sessionId || null,
+          latitude,
+          longitude,
+          distance: duplicateDistance
+        }
+      });
+
+      // Add new images to the existing report
+      if (imageUrls && imageUrls.length > 0) {
+        await prisma.reportImage.createMany({
+          data: imageUrls.map((url: string) => ({
+            reportId: duplicateReport.id,
+            imageUrl: url
+          }))
+        });
+      }
+
+      // Update agreement count and potentially verify the report
+      const newAgreementCount = duplicateReport._count.agreements + 1;
+      await prisma.report.update({
+        where: { id: duplicateReport.id },
+        data: {
+          agreementCount: { increment: 1 },
+          status: newAgreementCount >= 2 ? 'verified' : duplicateReport.status
+        }
+      });
+
+      // Fetch updated report with all images
+      const updatedReport = await prisma.report.findUnique({
+        where: { id: duplicateReport.id },
+        include: {
+          images: true,
+          user: {
+            select: { id: true, displayName: true, avatarUrl: true }
+          },
+          _count: {
+            select: { agreements: true }
+          }
+        }
+      });
+
+      return res.status(200).json({
+        ...updatedReport,
+        merged: true,
+        mergeMessage: `Your report was merged with an existing similar incident (${Math.round(duplicateDistance)}m away). Your submission counts as a verification.`
+      });
+    }
+
+    // No duplicate found, create new report
     const report = await prisma.report.create({
       data: {
         title,
@@ -132,7 +241,7 @@ router.post('/', async (req: Request, res: Response) => {
       }
     });
 
-    res.status(201).json(report);
+    res.status(201).json({ ...report, merged: false });
   } catch (error) {
     console.error('Error creating report:', error);
     res.status(500).json({ error: 'Failed to create report' });

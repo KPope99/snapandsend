@@ -1,16 +1,38 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 import { MapView } from '../components/map/MapView';
 import { ReportCard } from '../components/reports/ReportCard';
 import { useReports } from '../hooks/useReports';
 import { useLocation } from '../context/LocationContext';
 import { Report, ReportCategory, CATEGORIES } from '../types';
 
+interface NotificationState {
+  notification?: {
+    type: 'success' | 'info' | 'error';
+    message: string;
+  };
+}
+
 export function HomePage() {
   const navigate = useNavigate();
+  const routerLocation = useRouterLocation();
   const { location } = useLocation();
   const [selectedCategory, setSelectedCategory] = useState<ReportCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
+
+  // Handle notification from navigation state
+  useEffect(() => {
+    const state = routerLocation.state as NotificationState | null;
+    if (state?.notification) {
+      setNotification(state.notification);
+      // Clear the state so notification doesn't reappear on refresh
+      window.history.replaceState({}, document.title);
+      // Auto-dismiss after 6 seconds
+      const timer = setTimeout(() => setNotification(null), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [routerLocation.state]);
 
   const filters = useMemo(() => ({
     category: selectedCategory,
@@ -31,6 +53,52 @@ export function HomePage() {
 
   return (
     <div className="flex flex-col h-full pb-20">
+      {/* Notification Toast */}
+      {notification && (
+        <div
+          className={`fixed top-4 left-4 right-4 z-50 p-4 rounded-lg shadow-lg flex items-start gap-3 animate-slide-down ${
+            notification.type === 'success'
+              ? 'bg-emerald-50 border border-emerald-200'
+              : notification.type === 'info'
+              ? 'bg-blue-50 border border-blue-200'
+              : 'bg-red-50 border border-red-200'
+          }`}
+        >
+          <div className="flex-shrink-0">
+            {notification.type === 'success' ? (
+              <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : notification.type === 'info' ? (
+              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </div>
+          <p className={`text-sm flex-1 ${
+            notification.type === 'success'
+              ? 'text-emerald-700'
+              : notification.type === 'info'
+              ? 'text-blue-700'
+              : 'text-red-700'
+          }`}>
+            {notification.message}
+          </p>
+          <button
+            onClick={() => setNotification(null)}
+            className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">

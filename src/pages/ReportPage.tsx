@@ -167,7 +167,7 @@ export function ReportPage() {
       }
 
       // Create report
-      await createReport({
+      const result = await createReport({
         ...data,
         latitude: finalLat,
         longitude: finalLng,
@@ -177,7 +177,26 @@ export function ReportPage() {
         sessionId: sessionId || undefined
       });
 
-      navigate('/');
+      // Navigate with merge status
+      if (result.merged) {
+        navigate('/', {
+          state: {
+            notification: {
+              type: 'info',
+              message: result.mergeMessage || 'Your report was merged with a similar existing incident as a verification.'
+            }
+          }
+        });
+      } else {
+        navigate('/', {
+          state: {
+            notification: {
+              type: 'success',
+              message: 'Report submitted successfully!'
+            }
+          }
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit report');
     } finally {
