@@ -12,9 +12,13 @@ interface ReportFormProps {
     description?: string;
     category?: ReportCategory;
   };
+  customCategory?: {
+    value: string;
+    label: string;
+  };
 }
 
-export function ReportForm({ onSubmit, isLoading, initialValues }: ReportFormProps) {
+export function ReportForm({ onSubmit, isLoading, initialValues, customCategory }: ReportFormProps) {
   const [title, setTitle] = useState(initialValues?.title || '');
   const [description, setDescription] = useState(initialValues?.description || '');
   const [category, setCategory] = useState<ReportCategory>(initialValues?.category || 'other');
@@ -75,6 +79,7 @@ export function ReportForm({ onSubmit, isLoading, initialValues }: ReportFormPro
       <CategoryPicker
         value={category}
         onChange={setCategory}
+        customCategory={customCategory}
       />
 
       <Button type="submit" className="w-full" isLoading={isLoading}>

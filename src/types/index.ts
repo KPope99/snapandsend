@@ -47,7 +47,8 @@ export interface Report {
   updatedAt: string;
 }
 
-export type ReportCategory =
+// Base categories that are always available
+export type BaseCategory =
   | 'pothole'
   | 'garbage'
   | 'vandalism'
@@ -55,6 +56,9 @@ export type ReportCategory =
   | 'signage'
   | 'robbery'
   | 'other';
+
+// ReportCategory can be a base category or any AI-detected category
+export type ReportCategory = BaseCategory | string;
 
 export type ReportStatus = 'pending' | 'verified' | 'resolved';
 
@@ -84,7 +88,14 @@ export interface Location {
   address?: string;
 }
 
-export const CATEGORIES: { value: ReportCategory; label: string; icon: string }[] = [
+export interface CategoryInfo {
+  value: ReportCategory;
+  label: string;
+  icon: string;
+  isCustom?: boolean;
+}
+
+export const BASE_CATEGORIES: CategoryInfo[] = [
   { value: 'pothole', label: 'Pothole', icon: '🕳️' },
   { value: 'garbage', label: 'Garbage', icon: '🗑️' },
   { value: 'vandalism', label: 'Vandalism', icon: '🎨' },
@@ -93,6 +104,77 @@ export const CATEGORIES: { value: ReportCategory; label: string; icon: string }[
   { value: 'robbery', label: 'Robbery', icon: '🚨' },
   { value: 'other', label: 'Other', icon: '📌' }
 ];
+
+// For backwards compatibility
+export const CATEGORIES = BASE_CATEGORIES;
+
+// Storage key for custom categories
+const CUSTOM_CATEGORIES_KEY = 'snapandsend_custom_categories';
+
+// Get custom categories from localStorage
+export function getCustomCategories(): CategoryInfo[] {
+  try {
+    const stored = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+// Save a new custom category
+export function addCustomCategory(category: CategoryInfo): void {
+  const custom = getCustomCategories();
+  // Check if already exists
+  if (!custom.find(c => c.value === category.value) &&
+      !BASE_CATEGORIES.find(c => c.value === category.value)) {
+    custom.push({ ...category, isCustom: true });
+    localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(custom));
+  }
+}
+
+// Get all categories (base + custom)
+export function getAllCategories(): CategoryInfo[] {
+  return [...BASE_CATEGORIES, ...getCustomCategories()];
+}
+
+// Check if a category exists
+export function categoryExists(value: string): boolean {
+  return getAllCategories().some(c => c.value === value);
+}
+
+// Generate icon for AI-detected category
+export function generateCategoryIcon(category: string): string {
+  const iconMap: Record<string, string> = {
+    fire: '🔥',
+    flood: '🌊',
+    accident: '🚗',
+    crime: '🚨',
+    pollution: '☁️',
+    noise: '🔊',
+    parking: '🅿️',
+    construction: '🏗️',
+    power: '⚡',
+    water: '💧',
+    traffic: '🚦',
+    animal: '🐕',
+    tree: '🌳',
+    graffiti: '🎨',
+    broken: '💔',
+    dangerous: '⚠️',
+    abandoned: '🏚️',
+    illegal: '🚫',
+  };
+
+  // Check if any keyword matches
+  const lowerCategory = category.toLowerCase();
+  for (const [key, icon] of Object.entries(iconMap)) {
+    if (lowerCategory.includes(key)) {
+      return icon;
+    }
+  }
+
+  return '🔍'; // Default icon for new categories
+}
 
 export const STATUSES: { value: ReportStatus; label: string; color: string }[] = [
   { value: 'pending', label: 'Pending', color: 'amber' },

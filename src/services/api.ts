@@ -2,6 +2,8 @@ import { Report, ReportFilters, CreateReportData, User, ReportCategory } from '.
 
 export interface ImageAnalysisResult {
   category: ReportCategory;
+  categoryLabel: string;
+  isNewCategory: boolean;
   confidence: number;
   title: string;
   description: string;

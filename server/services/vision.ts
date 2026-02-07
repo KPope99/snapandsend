@@ -4,13 +4,17 @@ import path from 'path';
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export interface ImageAnalysisResult {
-  category: 'pothole' | 'garbage' | 'vandalism' | 'drainage' | 'signage' | 'robbery' | 'other';
+  category: string; // Can be a base category or AI-suggested new category
+  categoryLabel: string; // Human-readable label for the category
+  isNewCategory: boolean; // Whether this is a new AI-suggested category
   confidence: number;
   title: string;
   description: string;
   severity: 'low' | 'medium' | 'high';
   details: string[];
 }
+
+const BASE_CATEGORIES = ['pothole', 'garbage', 'vandalism', 'drainage', 'signage', 'robbery', 'other'];
 
 const CATEGORY_DESCRIPTIONS = {
   pothole: 'Road damage, potholes, cracks, or deteriorating pavement',
@@ -51,18 +55,21 @@ export async function analyzeImage(imagePath: string): Promise<ImageAnalysisResu
             role: 'system',
             content: `You are an AI assistant that analyzes images of infrastructure issues and incidents for a community reporting app called SnapAndSend.
 
-Your task is to analyze the image and categorize it into one of these categories:
+Your task is to analyze the image and categorize it. Use one of these existing categories if applicable:
 ${Object.entries(CATEGORY_DESCRIPTIONS).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')}
 
+IMPORTANT: If the image shows an incident that doesn't fit any of the above categories well, you SHOULD create a new category. Use a short, lowercase, single-word identifier (e.g., "fire", "flood", "accident", "pollution", "construction").
+
 Respond with a JSON object containing:
-- category: one of [pothole, garbage, vandalism, drainage, signage, robbery, other]
+- category: a category identifier (use existing ones above, OR create a new descriptive one)
+- categoryLabel: human-readable label for the category (e.g., "Fire Hazard", "Flooding", "Traffic Accident")
 - confidence: number between 0 and 1 indicating how confident you are
 - title: a brief descriptive title (max 60 chars)
 - description: a detailed description of what you see (2-3 sentences, max 200 chars)
 - severity: one of [low, medium, high] based on urgency/danger
 - details: array of specific observations (2-4 bullet points)
 
-Be specific and helpful. If the image doesn't show a clear incident, use category "other" with appropriate description.`
+Be specific and helpful. Create new categories when the image clearly shows something distinct from the existing categories.`
           },
           {
             role: 'user',
@@ -101,9 +108,15 @@ Be specific and helpful. If the image doesn't show a clear incident, use categor
 
     const analysis = JSON.parse(content) as ImageAnalysisResult;
 
+    // Sanitize the category (lowercase, no spaces)
+    const category = sanitizeCategory(analysis.category);
+    const isNewCategory = !BASE_CATEGORIES.includes(category);
+
     // Validate and sanitize the response
     return {
-      category: validateCategory(analysis.category),
+      category,
+      categoryLabel: analysis.categoryLabel || formatCategoryLabel(category),
+      isNewCategory,
       confidence: Math.min(1, Math.max(0, analysis.confidence || 0.5)),
       title: (analysis.title || 'Incident Report').slice(0, 100),
       description: (analysis.description || 'An incident has been detected in this image.').slice(0, 500),
@@ -140,11 +153,20 @@ function getMimeType(filePath: string): string {
   return mimeTypes[ext] || 'image/jpeg';
 }
 
-function validateCategory(category: string): ImageAnalysisResult['category'] {
-  const validCategories = ['pothole', 'garbage', 'vandalism', 'drainage', 'signage', 'robbery', 'other'];
-  return validCategories.includes(category)
-    ? category as ImageAnalysisResult['category']
-    : 'other';
+function sanitizeCategory(category: string): string {
+  // Convert to lowercase, remove spaces and special chars
+  return category
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    .slice(0, 20) || 'other';
+}
+
+function formatCategoryLabel(category: string): string {
+  // Convert category id to readable label
+  return category
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, str => str.toUpperCase())
+    .trim();
 }
 
 function validateSeverity(severity: string): ImageAnalysisResult['severity'] {
@@ -157,6 +179,8 @@ function validateSeverity(severity: string): ImageAnalysisResult['severity'] {
 function getFallbackAnalysis(): ImageAnalysisResult {
   return {
     category: 'other',
+    categoryLabel: 'Other',
+    isNewCategory: false,
     confidence: 0,
     title: '',
     description: '',

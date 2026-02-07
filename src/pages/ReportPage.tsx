@@ -9,7 +9,7 @@ import { Input } from '../components/common/Input';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
 import { uploadImages, createReport, reverseGeocode, analyzeImages, ImageAnalysisResult } from '../services/api';
-import { ReportCategory } from '../types';
+import { ReportCategory, addCustomCategory, generateCategoryIcon } from '../types';
 
 type Step = 'capture' | 'form';
 type LocationMode = 'gps' | 'manual';
@@ -154,6 +154,16 @@ export function ReportPage() {
       let imageUrls = uploadedImageUrls;
       if (imageUrls.length === 0) {
         imageUrls = await uploadImages(imageFiles);
+      }
+
+      // Save custom category if AI detected a new one
+      if (aiAnalysis?.isNewCategory && data.category === aiAnalysis.category) {
+        addCustomCategory({
+          value: aiAnalysis.category,
+          label: aiAnalysis.categoryLabel,
+          icon: generateCategoryIcon(aiAnalysis.category),
+          isCustom: true
+        });
       }
 
       // Create report
@@ -379,21 +389,32 @@ export function ReportPage() {
 
             {/* AI Analysis indicator */}
             {aiAnalysis && aiAnalysis.confidence > 0 && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+              <div className={`rounded-lg p-3 ${
+                aiAnalysis.isNewCategory
+                  ? 'bg-purple-50 border border-purple-200'
+                  : 'bg-emerald-50 border border-emerald-200'
+              }`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-5 h-5 ${aiAnalysis.isNewCategory ? 'text-purple-600' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
-                  <span className="text-sm font-medium text-emerald-700">AI-Detected Details</span>
-                  <span className="text-xs text-emerald-600 ml-auto">
+                  <span className={`text-sm font-medium ${aiAnalysis.isNewCategory ? 'text-purple-700' : 'text-emerald-700'}`}>
+                    {aiAnalysis.isNewCategory ? 'New Category Detected' : 'AI-Detected Details'}
+                  </span>
+                  <span className={`text-xs ml-auto ${aiAnalysis.isNewCategory ? 'text-purple-600' : 'text-emerald-600'}`}>
                     {Math.round(aiAnalysis.confidence * 100)}% confidence
                   </span>
                 </div>
+                {aiAnalysis.isNewCategory && (
+                  <div className="mb-2 px-2 py-1 bg-purple-100 rounded text-xs text-purple-700">
+                    Category: <strong>{aiAnalysis.categoryLabel}</strong> (new)
+                  </div>
+                )}
                 {aiAnalysis.details.length > 0 && (
                   <ul className="text-xs text-gray-600 space-y-1">
                     {aiAnalysis.details.map((detail, index) => (
                       <li key={index} className="flex items-start gap-1">
-                        <span className="text-emerald-500">•</span>
+                        <span className={aiAnalysis.isNewCategory ? 'text-purple-500' : 'text-emerald-500'}>•</span>
                         {detail}
                       </li>
                     ))}
@@ -413,6 +434,10 @@ export function ReportPage() {
                 title: aiAnalysis.title,
                 description: aiAnalysis.description,
                 category: aiAnalysis.category
+              } : undefined}
+              customCategory={aiAnalysis?.isNewCategory ? {
+                value: aiAnalysis.category,
+                label: aiAnalysis.categoryLabel
               } : undefined}
             />
 
