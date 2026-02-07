@@ -7,7 +7,6 @@ import { ReportPage } from './pages/ReportPage';
 import { ReportDetailPage } from './pages/ReportDetailPage';
 import { MyReportsPage } from './pages/MyReportsPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { CongestionPage } from './pages/CongestionPage';
 
 function App() {
   return (
@@ -20,7 +19,6 @@ function App() {
               <Route path="/report" element={<ReportPage />} />
               <Route path="/report/:id" element={<ReportDetailPage />} />
               <Route path="/my-reports" element={<MyReportsPage />} />
-              <Route path="/congestion" element={<CongestionPage />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Routes>
             <Navbar />

@@ -130,7 +130,7 @@ export function CongestionPage() {
   }
 
   return (
-    <div className="flex flex-col h-full pb-20">
+    <div className="flex flex-col h-screen pb-20">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
         <h1 className="text-xl font-bold text-gray-900">Traffic Congestion</h1>
@@ -220,7 +220,7 @@ export function CongestionPage() {
           </div>
         )}
 
-        <div ref={mapRef} className="w-full h-full" />
+        <div ref={mapRef} className="absolute inset-0" />
       </main>
 
       {/* Copyright */}

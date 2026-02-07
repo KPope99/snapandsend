@@ -76,27 +76,20 @@ export function ProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Account section */}
-          <Card>
-            <CardHeader>
-              <h3 className="font-medium text-gray-900">Account</h3>
-            </CardHeader>
-            <CardContent>
-              <Button variant="danger" onClick={logout} className="w-full">
-                Sign Out
-              </Button>
-            </CardContent>
-          </Card>
-
           {/* App info */}
           <Card>
             <CardHeader>
               <h3 className="font-medium text-gray-900">About</h3>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm text-gray-600">
-              <p><strong>SnapAndSend</strong></p>
-              <p>Version 1.0.0</p>
-              <p>Report community issues and help improve your neighbourhood.</p>
+            <CardContent className="space-y-4">
+              <div className="space-y-2 text-sm text-gray-600">
+                <p><strong>SnapAndSend</strong></p>
+                <p>Version 1.0.0</p>
+                <p>Report community issues and help improve your neighbourhood.</p>
+              </div>
+              <Button variant="danger" onClick={logout} className="w-full">
+                Sign Out
+              </Button>
             </CardContent>
           </Card>
 
