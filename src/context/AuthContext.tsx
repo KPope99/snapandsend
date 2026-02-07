@@ -1,6 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { User } from '../types';
 import { getCurrentUser, getSession, login as apiLogin, register as apiRegister } from '../services/api';
+
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes in milliseconds
+const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+const LAST_ACTIVITY_KEY = 'snapandsend_last_activity';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName?: string) => Promise<void>;
   logout: () => void;
+  resetActivityTimer: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +24,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSessionTimeout = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  const handleSessionTimeout = useCallback(() => {
+    console.log('Session timed out due to inactivity');
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('snapandsend_token');
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    clearSessionTimeout();
+  }, [clearSessionTimeout]);
+
+  const resetActivityTimer = useCallback(() => {
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+    clearSessionTimeout();
+    timeoutRef.current = setTimeout(handleSessionTimeout, SESSION_TIMEOUT_MS);
+  }, [clearSessionTimeout, handleSessionTimeout]);
+
+  // Set up activity listeners when user is logged in
+  useEffect(() => {
+    if (!user) {
+      clearSessionTimeout();
+      return;
+    }
+
+    // Check if session has already expired (e.g., after page refresh)
+    const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
+    if (lastActivity) {
+      const elapsed = Date.now() - parseInt(lastActivity, 10);
+      if (elapsed >= SESSION_TIMEOUT_MS) {
+        handleSessionTimeout();
+        return;
+      }
+    }
+
+    // Start the timer
+    resetActivityTimer();
+
+    // Add activity listeners
+    const handleActivity = () => resetActivityTimer();
+    ACTIVITY_EVENTS.forEach((event) => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    return () => {
+      ACTIVITY_EVENTS.forEach((event) => {
+        window.removeEventListener(event, handleActivity);
+      });
+      clearSessionTimeout();
+    };
+  }, [user, resetActivityTimer, clearSessionTimeout, handleSessionTimeout]);
 
   useEffect(() => {
     initAuth();
@@ -33,6 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check for existing token
       const storedToken = localStorage.getItem('snapandsend_token');
       if (storedToken) {
+        // Check if session has expired before restoring
+        const lastActivity = localStorage.getItem(LAST_ACTIVITY_KEY);
+        if (lastActivity) {
+          const elapsed = Date.now() - parseInt(lastActivity, 10);
+          if (elapsed >= SESSION_TIMEOUT_MS) {
+            // Session expired, clear storage
+            localStorage.removeItem('snapandsend_token');
+            localStorage.removeItem(LAST_ACTIVITY_KEY);
+            return;
+          }
+        }
+
         const userData = await getCurrentUser(storedToken);
         setUser(userData);
         setToken(storedToken);
@@ -40,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Auth init error:', error);
       localStorage.removeItem('snapandsend_token');
+      localStorage.removeItem(LAST_ACTIVITY_KEY);
     } finally {
       setIsLoading(false);
     }
@@ -50,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     setToken(newToken);
     localStorage.setItem('snapandsend_token', newToken);
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
   }
 
   async function register(email: string, password: string, displayName?: string) {
@@ -57,16 +133,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData);
     setToken(newToken);
     localStorage.setItem('snapandsend_token', newToken);
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
   }
 
   function logout() {
     setUser(null);
     setToken(null);
     localStorage.removeItem('snapandsend_token');
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+    clearSessionTimeout();
   }
 
   return (
-    <AuthContext.Provider value={{ user, sessionId, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, sessionId, token, isLoading, login, register, logout, resetActivityTimer }}>
       {children}
     </AuthContext.Provider>
   );

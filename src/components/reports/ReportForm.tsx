@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input, Textarea } from '../common/Input';
 import { Button } from '../common/Button';
 import { CategoryPicker } from './CategoryPicker';
@@ -7,13 +7,25 @@ import { ReportCategory } from '../../types';
 interface ReportFormProps {
   onSubmit: (data: { title: string; description: string; category: ReportCategory }) => void;
   isLoading?: boolean;
+  initialValues?: {
+    title?: string;
+    description?: string;
+    category?: ReportCategory;
+  };
 }
 
-export function ReportForm({ onSubmit, isLoading }: ReportFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<ReportCategory>('other');
+export function ReportForm({ onSubmit, isLoading, initialValues }: ReportFormProps) {
+  const [title, setTitle] = useState(initialValues?.title || '');
+  const [description, setDescription] = useState(initialValues?.description || '');
+  const [category, setCategory] = useState<ReportCategory>(initialValues?.category || 'other');
   const [errors, setErrors] = useState<{ title?: string; description?: string }>({});
+
+  // Update form when initial values change
+  useEffect(() => {
+    if (initialValues?.title) setTitle(initialValues.title);
+    if (initialValues?.description) setDescription(initialValues.description);
+    if (initialValues?.category) setCategory(initialValues.category);
+  }, [initialValues?.title, initialValues?.description, initialValues?.category]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

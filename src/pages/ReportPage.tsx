@@ -8,7 +8,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadImages, createReport, reverseGeocode } from '../services/api';
+import { uploadImages, createReport, reverseGeocode, analyzeImages, ImageAnalysisResult } from '../services/api';
 import { ReportCategory } from '../types';
 
 type Step = 'capture' | 'form';
@@ -24,7 +24,10 @@ export function ReportPage() {
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<ImageAnalysisResult | null>(null);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
   // Location mode state
   const [locationMode, setLocationMode] = useState<LocationMode>('gps');
@@ -66,7 +69,7 @@ export function ReportPage() {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (imagePreview.length === 0) {
       setError('Please add at least one image');
       return;
@@ -84,7 +87,22 @@ export function ReportPage() {
     }
 
     setError(null);
-    setStep('form');
+    setIsAnalyzing(true);
+
+    try {
+      // Analyze images with AI
+      const result = await analyzeImages(imageFiles);
+      setAiAnalysis(result.analysis);
+      setUploadedImageUrls(result.imageUrls);
+      setStep('form');
+    } catch (err) {
+      console.error('Error analyzing images:', err);
+      // Continue to form even if analysis fails
+      setAiAnalysis(null);
+      setStep('form');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleSubmit = async (data: { title: string; description: string; category: ReportCategory }) => {
@@ -132,8 +150,11 @@ export function ReportPage() {
     setError(null);
 
     try {
-      // Upload images
-      const imageUrls = await uploadImages(imageFiles);
+      // Use already uploaded URLs from analysis, or upload now
+      let imageUrls = uploadedImageUrls;
+      if (imageUrls.length === 0) {
+        imageUrls = await uploadImages(imageFiles);
+      }
 
       // Create report
       await createReport({
@@ -315,9 +336,10 @@ export function ReportPage() {
             <Button
               onClick={handleContinue}
               className="w-full"
-              disabled={imagePreview.length === 0}
+              disabled={imagePreview.length === 0 || isAnalyzing}
+              isLoading={isAnalyzing}
             >
-              Continue
+              {isAnalyzing ? 'Analyzing with AI...' : 'Continue'}
             </Button>
           </div>
         ) : (
@@ -355,8 +377,44 @@ export function ReportPage() {
               </div>
             </div>
 
+            {/* AI Analysis indicator */}
+            {aiAnalysis && aiAnalysis.confidence > 0 && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <span className="text-sm font-medium text-emerald-700">AI-Detected Details</span>
+                  <span className="text-xs text-emerald-600 ml-auto">
+                    {Math.round(aiAnalysis.confidence * 100)}% confidence
+                  </span>
+                </div>
+                {aiAnalysis.details.length > 0 && (
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {aiAnalysis.details.map((detail, index) => (
+                      <li key={index} className="flex items-start gap-1">
+                        <span className="text-emerald-500">•</span>
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="text-xs text-gray-500 mt-2">
+                  Review and adjust the details below as needed.
+                </p>
+              </div>
+            )}
+
             {/* Form */}
-            <ReportForm onSubmit={handleSubmit} isLoading={isSubmitting} />
+            <ReportForm
+              onSubmit={handleSubmit}
+              isLoading={isSubmitting}
+              initialValues={aiAnalysis ? {
+                title: aiAnalysis.title,
+                description: aiAnalysis.description,
+                category: aiAnalysis.category
+              } : undefined}
+            />
 
             {error && (
               <p className="text-sm text-red-500 text-center">{error}</p>

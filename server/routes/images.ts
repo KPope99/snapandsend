@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { analyzeMultipleImages } from '../services/vision.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +59,34 @@ router.post('/upload', upload.array('images', 5), (req: Request, res: Response) 
   } catch (error) {
     console.error('Error uploading images:', error);
     res.status(500).json({ error: 'Failed to upload images' });
+  }
+});
+
+// Analyze images with AI to detect category and generate description
+router.post('/analyze', upload.array('images', 5), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded for analysis' });
+    }
+
+    // Get the file paths for analysis
+    const imagePaths = files.map(file => file.path);
+
+    // Analyze the images
+    const analysis = await analyzeMultipleImages(imagePaths);
+
+    // Return the analysis along with the uploaded image URLs
+    const imageUrls = files.map(file => `/uploads/${file.filename}`);
+
+    res.json({
+      analysis,
+      imageUrls
+    });
+  } catch (error) {
+    console.error('Error analyzing images:', error);
+    res.status(500).json({ error: 'Failed to analyze images' });
   }
 });
 
