@@ -1,73 +1,196 @@
-# React + TypeScript + Vite
+# SnapAndSend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A community-powered incident reporting Progressive Web App (PWA) that enables citizens to report local issues with photos and location data.
 
-Currently, two official plugins are available:
+**Snap. Send. Solve.**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Overview
 
-## React Compiler
+SnapAndSend empowers communities to report infrastructure issues, safety concerns, and other incidents directly to local authorities. With AI-powered image analysis, automatic duplicate detection, and real-time status tracking, it bridges the gap between citizens and the agencies responsible for resolving issues.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+### For Citizens
+- **Photo Capture** - Take photos or upload images of incidents
+- **AI-Powered Analysis** - Automatic category detection and description generation using OpenAI Vision
+- **GPS Location** - Automatic location tagging with manual override option
+- **Community Verification** - Nearby users can verify reports (within 500m)
+- **Duplicate Detection** - Similar incidents within 200m are automatically merged as verifications
+- **Real-time Tracking** - Monitor the status of your reports from pending to resolved
+- **PWA Support** - Install on any device, works offline
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### For Authorities
+- **External API** - RESTful API for integration with existing systems
+- **Webhook Support** - Real-time notifications for incident events
+- **Status Management** - Update incident status with evidence and notes
+- **Statistics** - Analytics on incident types, counts, and trends
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Tech Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS
+- **Backend**: Node.js, Express, Prisma ORM
+- **Database**: SQLite (dev) / PostgreSQL (prod)
+- **Maps**: Leaflet with OpenStreetMap
+- **AI**: OpenAI Vision API (GPT-4o-mini)
+- **Auth**: JWT with bcrypt password hashing
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- OpenAI API key (optional, for AI features)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/KPope99/snapandsend.git
+   cd snapandsend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit `.env` and add your configuration:
+   ```env
+   DATABASE_URL="file:./dev.db"
+   OPENAI_API_KEY="your-openai-api-key"
+   JWT_SECRET="your-jwt-secret"
+   ```
+
+4. **Initialize the database**
+   ```bash
+   npx prisma migrate dev
+   npx prisma db seed
+   ```
+
+5. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+   The app will be available at:
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5002
+
+## Project Structure
+
+```
+snapandsend/
+├── prisma/
+│   ├── schema.prisma      # Database schema
+│   └── seed.ts            # Seed data
+├── server/
+│   ├── index.ts           # Express server entry
+│   ├── routes/
+│   │   ├── auth.ts        # Authentication routes
+│   │   ├── reports.ts     # Report CRUD operations
+│   │   ├── images.ts      # Image upload & AI analysis
+│   │   ├── external.ts    # External API for authorities
+│   │   └── location.ts    # Geocoding services
+│   └── services/
+│       ├── vision.ts      # OpenAI Vision integration
+│       └── geo.ts         # Geolocation utilities
+├── src/
+│   ├── components/        # React components
+│   ├── context/           # React context providers
+│   ├── hooks/             # Custom hooks
+│   ├── pages/             # Page components
+│   ├── services/          # API client services
+│   └── types/             # TypeScript definitions
+└── public/                # Static assets
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## API Documentation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### External API (for Authorities)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+All endpoints require `X-API-Key` header.
+
+#### Get Incidents
+```http
+GET /api/external/incidents
 ```
+Query params: `status`, `category`, `since`, `lat`, `lng`, `radius`, `limit`, `offset`
+
+#### Get Single Incident
+```http
+GET /api/external/incidents/:id
+```
+
+#### Update Incident Status
+```http
+PATCH /api/external/incidents/:id/status
+Content-Type: application/json
+
+{
+  "status": "investigating|resolved",
+  "notes": "Resolution description",
+  "evidenceUrl": "https://..."
+}
+```
+
+#### Get Statistics
+```http
+GET /api/external/stats
+```
+
+#### Register Webhook
+```http
+POST /api/external/webhooks
+Content-Type: application/json
+
+{
+  "url": "https://your-server.com/webhook",
+  "events": ["incident.created", "incident.verified", "incident.resolved"]
+}
+```
+
+## Incident Categories
+
+- Pothole / Road Damage
+- Garbage / Illegal Dumping
+- Streetlight Outage
+- Drainage Issues
+- Vandalism
+- Signage Damage
+- Robbery
+- Other
+- AI-detected custom categories
+
+## Related Projects
+
+- **[Incident Response](https://github.com/KPope99/incident-response)** - Police/Authority dashboard for managing reported incidents
+
+## Screenshots
+
+*Coming soon*
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is proprietary software developed by Tech84.
+
+## Contact
+
+**Tech84** - Building technology solutions for communities
+
+---
+
+© Tech84
