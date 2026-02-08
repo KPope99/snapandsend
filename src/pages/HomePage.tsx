@@ -152,10 +152,10 @@ export function HomePage() {
         </button>
       </header>
 
-      {/* How It Works - 3 Step Process */}
-      <div className="bg-gray-50 px-4 py-4">
-        <h2 className="text-gray-900 text-center text-lg font-bold mb-4">
-          How Snap Send Solve Works
+      {/* Tagline & 3 Step Process */}
+      <div className="bg-gray-50 px-4 py-5">
+        <h2 className="text-gray-500 text-center text-xl font-bold mb-5 px-2">
+          We connect communities to problem-solving authorities and Fixers
         </h2>
         <div className="flex gap-2">
           {/* Step 1: Snap - Clickable to Report Page */}
