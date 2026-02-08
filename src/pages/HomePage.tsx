@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
+import { useNavigate, useLocation as useRouterLocation, Link } from 'react-router-dom';
 import { MapView } from '../components/map/MapView';
 import { ReportCard } from '../components/reports/ReportCard';
 import { useReports } from '../hooks/useReports';
 import { useLocation } from '../context/LocationContext';
+import { useAuth } from '../context/AuthContext';
 import { Report } from '../types';
 
 interface NotificationState {
@@ -17,6 +18,7 @@ export function HomePage() {
   const navigate = useNavigate();
   const routerLocation = useRouterLocation();
   const { location } = useLocation();
+  const { user } = useAuth();
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
@@ -50,7 +52,7 @@ export function HomePage() {
   };
 
   return (
-    <div className="flex flex-col h-full pb-20">
+    <div className="flex flex-col h-full">
       {/* Notification Toast */}
       {notification && (
         <div
@@ -96,6 +98,26 @@ export function HomePage() {
           </button>
         </div>
       )}
+
+      {/* Top Navigation Bar */}
+      <nav className="bg-emerald-600 text-white px-4 py-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="text-sm font-medium hover:text-emerald-100 transition-colors">
+              Home
+            </Link>
+            <Link to="/my-reports" className="text-sm font-medium hover:text-emerald-100 transition-colors">
+              My Reports
+            </Link>
+          </div>
+          <Link
+            to="/profile"
+            className="text-sm font-medium hover:text-emerald-100 transition-colors"
+          >
+            {user ? 'Profile' : 'Login'}
+          </Link>
+        </div>
+      </nav>
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
@@ -252,6 +274,29 @@ export function HomePage() {
         )}
       </main>
 
+      {/* Footer Links */}
+      <footer className="bg-gray-800 text-white px-4 py-6">
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+            About Us
+          </a>
+          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+            How it Works
+          </a>
+          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+            Collaborate with Us
+          </a>
+          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+            Fixers
+          </a>
+          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+            Help Centre
+          </a>
+        </div>
+        <div className="border-t border-gray-700 pt-4 text-center">
+          <p className="text-xs text-gray-400">© Tech84</p>
+        </div>
+      </footer>
     </div>
   );
 }

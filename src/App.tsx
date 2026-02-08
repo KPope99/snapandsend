@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { LocationProvider } from './context/LocationContext';
-import { Navbar } from './components/common/Navbar';
 import { HomePage } from './pages/HomePage';
 import { ReportPage } from './pages/ReportPage';
 import { ReportDetailPage } from './pages/ReportDetailPage';
@@ -21,7 +20,6 @@ function App() {
               <Route path="/my-reports" element={<MyReportsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Routes>
-            <Navbar />
           </div>
         </LocationProvider>
       </AuthProvider>
