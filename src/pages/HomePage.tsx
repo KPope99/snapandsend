@@ -122,7 +122,9 @@ export function HomePage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">SnapAndSend</h1>
+          <h1 className="text-3xl font-black tracking-wider metallic-grey">
+            SnapAndSend
+          </h1>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode('map')}
@@ -154,8 +156,8 @@ export function HomePage() {
 
       {/* Tagline & 3 Step Process */}
       <div className="bg-gray-50 px-4 py-5">
-        <h2 className="text-gray-500 text-center text-xl font-bold mb-5 px-2">
-          We connect communities to problem-solving authorities and Fixers
+        <h2 className="text-gray-500 text-center text-xl font-bold italic mb-5 px-2" style={{ fontFamily: 'Georgia, serif' }}>
+          "We connect communities to problem-solving authorities and Fixers"
         </h2>
         <div className="flex gap-2">
           {/* Step 1: Snap - Clickable to Report Page */}
