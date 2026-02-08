@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -174,6 +175,16 @@ export function ProfilePage() {
         <div className="mt-6 text-center text-sm text-gray-500">
           <p>You can use SnapAndSend without an account.</p>
           <p>Creating an account lets you manage your reports across devices.</p>
+        </div>
+
+        {/* Go to Home link */}
+        <div className="mt-6 text-center">
+          <Link
+            to="/"
+            className="text-emerald-600 hover:text-emerald-700 font-medium"
+          >
+            Go to Home
+          </Link>
         </div>
 
         {/* Copyright */}
