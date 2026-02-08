@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CameraCapture } from '../components/camera/CameraCapture';
 import { ImageUploader } from '../components/camera/ImageUploader';
@@ -16,7 +16,7 @@ type LocationMode = 'gps' | 'manual';
 
 export function ReportPage() {
   const navigate = useNavigate();
-  const { location, isLoading: locationLoading, error: locationError, refreshLocation } = useLocation();
+  const { location, isLoading: locationLoading, error: locationError, refreshLocation, permissionDenied } = useLocation();
   const { user, sessionId } = useAuth();
 
   const [step, setStep] = useState<Step>('capture');
@@ -29,11 +29,18 @@ export function ReportPage() {
   const [aiAnalysis, setAiAnalysis] = useState<ImageAnalysisResult | null>(null);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
-  // Location mode state
-  const [locationMode, setLocationMode] = useState<LocationMode>('gps');
+  // Location mode state - default to manual if permission already denied
+  const [locationMode, setLocationMode] = useState<LocationMode>(permissionDenied ? 'manual' : 'gps');
   const [manualAddress, setManualAddress] = useState('');
   const [manualLat, setManualLat] = useState('');
   const [manualLng, setManualLng] = useState('');
+
+  // Auto-switch to manual mode when location permission is denied
+  useEffect(() => {
+    if (permissionDenied) {
+      setLocationMode('manual');
+    }
+  }, [permissionDenied]);
 
   const handleCapture = useCallback((dataUrl: string) => {
     setShowCamera(false);
@@ -308,9 +315,15 @@ export function ReportPage() {
                     ) : locationError ? (
                       <div>
                         <span className="text-sm text-red-500">{locationError}</span>
-                        <button onClick={refreshLocation} className="ml-2 text-sm text-emerald-600 underline">
-                          Retry
-                        </button>
+                        {permissionDenied ? (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Enable location in your browser settings, or switch to <button onClick={() => setLocationMode('manual')} className="text-emerald-600 underline font-medium">Manual</button> mode.
+                          </p>
+                        ) : (
+                          <button onClick={refreshLocation} className="ml-2 text-sm text-emerald-600 underline">
+                            Retry
+                          </button>
+                        )}
                       </div>
                     ) : location ? (
                       <span className="text-sm text-gray-700">
