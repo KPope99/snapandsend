@@ -4,7 +4,7 @@ import { MapView } from '../components/map/MapView';
 import { ReportCard } from '../components/reports/ReportCard';
 import { useReports } from '../hooks/useReports';
 import { useLocation } from '../context/LocationContext';
-import { Report, ReportCategory, CATEGORIES } from '../types';
+import { Report } from '../types';
 
 interface NotificationState {
   notification?: {
@@ -17,7 +17,6 @@ export function HomePage() {
   const navigate = useNavigate();
   const routerLocation = useRouterLocation();
   const { location } = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState<ReportCategory | 'all'>('all');
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
@@ -35,11 +34,10 @@ export function HomePage() {
   }, [routerLocation.state]);
 
   const filters = useMemo(() => ({
-    category: selectedCategory,
     lat: location?.latitude,
     lng: location?.longitude,
     radius: 5000 // 5km radius
-  }), [selectedCategory, location]);
+  }), [location]);
 
   const { reports, isLoading } = useReports(filters);
 
@@ -123,33 +121,93 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Category filter */}
-        <div className="flex gap-2 mt-3 overflow-x-auto pb-2 -mx-4 px-4">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setSelectedCategory(cat.value)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === cat.value
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {cat.icon} {cat.label}
-            </button>
-          ))}
-        </div>
+        {/* Prominent Create Incident Button */}
+        <button
+          onClick={() => navigate('/report')}
+          className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center shadow-lg transition-all active:scale-[0.98]"
+        >
+          Report New Incident
+        </button>
       </header>
+
+      {/* How It Works - 3 Step Process */}
+      <div className="bg-gray-50 px-4 py-4">
+        <h2 className="text-gray-900 text-center text-lg font-bold mb-4">
+          How Snap Send Solve Works
+        </h2>
+        <div className="flex gap-2">
+          {/* Step 1: Snap - Clickable to Report Page */}
+          <button
+            onClick={() => navigate('/report')}
+            className="flex-1 flex flex-col group"
+          >
+            <div className="relative h-28 rounded-xl overflow-hidden bg-gradient-to-br from-sky-400 to-sky-600 shadow-md group-hover:shadow-lg group-hover:scale-[1.02] transition-all">
+              {/* Background illustration */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 9a3.75 3.75 0 100 7.5A3.75 3.75 0 0012 9z" />
+                  <path fillRule="evenodd" d="M9.344 3.071a49.52 49.52 0 015.312 0c.967.052 1.83.585 2.332 1.39l.821 1.317c.24.383.645.643 1.11.71.386.054.77.113 1.152.177 1.432.239 2.429 1.493 2.429 2.909V18a3 3 0 01-3 3H4.5a3 3 0 01-3-3V9.574c0-1.416.997-2.67 2.429-2.909.382-.064.766-.123 1.151-.178a1.56 1.56 0 001.11-.71l.822-1.315a2.942 2.942 0 012.332-1.39z" clipRule="evenodd" />
+                </svg>
+              </div>
+              {/* Hand with phone icon */}
+              <div className="absolute bottom-2 left-2">
+                <div className="w-10 h-10 bg-sky-300 rounded-full flex items-center justify-center border-2 border-white shadow">
+                  <svg className="w-5 h-5 text-sky-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+              {/* Tap indicator */}
+              <div className="absolute top-2 right-2 bg-white/90 rounded-full px-2 py-0.5">
+                <span className="text-[10px] font-medium text-sky-700">Tap to start</span>
+              </div>
+            </div>
+            <p className="text-gray-900 text-center text-sm font-semibold mt-2">Snap</p>
+          </button>
+
+          {/* Step 2: Send */}
+          <div className="flex-1 flex flex-col">
+            <div className="relative h-28 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-md">
+              {/* Background illustration */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M8.161 2.58a1.875 1.875 0 011.678 0l4.993 2.498c.106.052.23.052.336 0l3.869-1.935A1.875 1.875 0 0121.75 4.82v12.485c0 .71-.401 1.36-1.037 1.677l-4.875 2.437a1.875 1.875 0 01-1.676 0l-4.994-2.497a.375.375 0 00-.336 0l-3.868 1.935A1.875 1.875 0 012.25 19.18V6.695c0-.71.401-1.36 1.036-1.677l4.875-2.437zM9 6a.75.75 0 01.75.75V15a.75.75 0 01-1.5 0V6.75A.75.75 0 019 6zm6.75 3a.75.75 0 00-1.5 0v8.25a.75.75 0 001.5 0V9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              {/* Pointing hand icon */}
+              <div className="absolute bottom-2 left-2">
+                <div className="w-10 h-10 bg-emerald-300 rounded-full flex items-center justify-center border-2 border-white shadow">
+                  <svg className="w-5 h-5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p className="text-gray-900 text-center text-sm font-semibold mt-2">Send</p>
+          </div>
+
+          {/* Step 3: Solve */}
+          <div className="flex-1 flex flex-col">
+            <div className="relative h-28 rounded-xl overflow-hidden bg-gradient-to-br from-amber-400 to-amber-600 shadow-md">
+              {/* Background illustration */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                <svg className="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                </svg>
+              </div>
+              {/* Thumbs up icon */}
+              <div className="absolute bottom-2 left-2">
+                <div className="w-10 h-10 bg-amber-300 rounded-full flex items-center justify-center border-2 border-white shadow">
+                  <svg className="w-5 h-5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <p className="text-gray-900 text-center text-sm font-semibold mt-2">Solve</p>
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <main className="flex-1 overflow-hidden">
@@ -194,15 +252,6 @@ export function HomePage() {
         )}
       </main>
 
-      {/* Stats bar */}
-      <div className="bg-emerald-50 px-4 py-2 text-center text-sm text-emerald-700">
-        {reports.length} reports in your area
-      </div>
-
-      {/* Copyright */}
-      <div className="bg-gray-100 px-4 py-2 text-center text-xs text-gray-500">
-        © Tech84
-      </div>
     </div>
   );
 }

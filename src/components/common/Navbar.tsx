@@ -5,10 +5,9 @@ export function Navbar() {
   const location = useLocation();
   const { user } = useAuth();
 
-  // Base nav items
+  // Base nav items (removed Report since it's now prominent at top)
   const baseNavItems = [
     { path: '/', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', label: 'Home' },
-    { path: '/report', icon: 'M12 4v16m8-8H4', label: 'Report' },
     { path: '/my-reports', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'My Reports' },
   ];
 
@@ -32,20 +31,10 @@ export function Navbar() {
                 isActive ? 'text-emerald-600' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              {item.path === '/report' ? (
-                <div className="w-12 h-12 -mt-6 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                  </svg>
-                </div>
-              ) : (
-                <>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                  </svg>
-                  <span className="text-xs mt-1">{item.label}</span>
-                </>
-              )}
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+              </svg>
+              <span className="text-xs mt-1">{item.label}</span>
             </Link>
           );
         })}
