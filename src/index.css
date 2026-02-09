@@ -86,15 +86,15 @@ body,
   animation: slide-down 0.3s ease-out;
 }
 
-/* Metallic grey text effect */
-.metallic-grey {
+/* Metallic green text effect */
+.metallic-green {
   background: linear-gradient(
     180deg,
-    #6b7280 0%,
-    #d1d5db 25%,
-    #9ca3af 50%,
-    #4b5563 75%,
-    #6b7280 100%
+    #059669 0%,
+    #6ee7b7 25%,
+    #34d399 50%,
+    #047857 75%,
+    #059669 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
