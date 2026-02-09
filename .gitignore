@@ -24,6 +24,9 @@ uploads/
 prisma/dev.db
 prisma/dev.db-journal
 
+# SSL certificates
+*.pem
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
