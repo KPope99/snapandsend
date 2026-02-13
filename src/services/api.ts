@@ -1,15 +1,4 @@
-import { Report, ReportFilters, CreateReportData, User, ReportCategory } from '../types';
-
-export interface ImageAnalysisResult {
-  category: ReportCategory;
-  categoryLabel: string;
-  isNewCategory: boolean;
-  confidence: number;
-  title: string;
-  description: string;
-  severity: 'low' | 'medium' | 'high';
-  details: string[];
-}
+import { Report, ReportFilters, CreateReportData, User } from '../types';
 
 const API_BASE = '/api';
 
@@ -195,24 +184,6 @@ export async function uploadImages(files: File[]): Promise<string[]> {
 
   const data = await response.json();
   return data.imageUrls;
-}
-
-// Analyze images with AI
-export async function analyzeImages(files: File[]): Promise<{ analysis: ImageAnalysisResult; imageUrls: string[] }> {
-  const formData = new FormData();
-  files.forEach(file => formData.append('images', file));
-
-  const response = await fetch(`${API_BASE}/images/analyze`, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to analyze images');
-  }
-
-  return response.json();
 }
 
 // Location

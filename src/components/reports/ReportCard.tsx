@@ -26,18 +26,7 @@ export function ReportCard({ report, onClick }: ReportCardProps) {
 
   return (
     <Card onClick={onClick} className="hover:shadow-md transition-shadow">
-      <div className="flex gap-3">
-        {/* Image */}
-        {report.images[0] && (
-          <div className="flex-shrink-0">
-            <img
-              src={report.images[0].imageUrl}
-              alt={report.title}
-              className="w-24 h-24 object-cover rounded-lg"
-            />
-          </div>
-        )}
-
+      <div>
         {/* Content */}
         <div className="flex-1 min-w-0 p-3">
           <div className="flex items-start justify-between gap-2">

@@ -8,8 +8,8 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadImages, createReport, reverseGeocode, analyzeImages, ImageAnalysisResult } from '../services/api';
-import { ReportCategory, addCustomCategory, generateCategoryIcon } from '../types';
+import { uploadImages, createReport, reverseGeocode } from '../services/api';
+import { ReportCategory } from '../types';
 
 type Step = 'capture' | 'form';
 type LocationMode = 'gps' | 'manual';
@@ -24,10 +24,7 @@ export function ReportPage() {
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [aiAnalysis, setAiAnalysis] = useState<ImageAnalysisResult | null>(null);
-  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
   // Location mode state - default to manual if permission already denied
   const [locationMode, setLocationMode] = useState<LocationMode>(permissionDenied ? 'manual' : 'gps');
@@ -76,7 +73,7 @@ export function ReportPage() {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (imagePreview.length === 0) {
       setError('Please add at least one image');
       return;
@@ -94,22 +91,7 @@ export function ReportPage() {
     }
 
     setError(null);
-    setIsAnalyzing(true);
-
-    try {
-      // Analyze images with AI
-      const result = await analyzeImages(imageFiles);
-      setAiAnalysis(result.analysis);
-      setUploadedImageUrls(result.imageUrls);
-      setStep('form');
-    } catch (err) {
-      console.error('Error analyzing images:', err);
-      // Continue to form even if analysis fails
-      setAiAnalysis(null);
-      setStep('form');
-    } finally {
-      setIsAnalyzing(false);
-    }
+    setStep('form');
   };
 
   const handleSubmit = async (data: { title: string; description: string; category: ReportCategory }) => {
@@ -157,21 +139,7 @@ export function ReportPage() {
     setError(null);
 
     try {
-      // Use already uploaded URLs from analysis, or upload now
-      let imageUrls = uploadedImageUrls;
-      if (imageUrls.length === 0) {
-        imageUrls = await uploadImages(imageFiles);
-      }
-
-      // Save custom category if AI detected a new one
-      if (aiAnalysis?.isNewCategory && data.category === aiAnalysis.category) {
-        addCustomCategory({
-          value: aiAnalysis.category,
-          label: aiAnalysis.categoryLabel,
-          icon: generateCategoryIcon(aiAnalysis.category),
-          isCustom: true
-        });
-      }
+      const imageUrls = await uploadImages(imageFiles);
 
       // Create report
       const result = await createReport({
@@ -378,10 +346,9 @@ export function ReportPage() {
             <Button
               onClick={handleContinue}
               className="w-full"
-              disabled={imagePreview.length === 0 || isAnalyzing}
-              isLoading={isAnalyzing}
+              disabled={imagePreview.length === 0}
             >
-              {isAnalyzing ? 'Analyzing with AI...' : 'Continue'}
+              Continue
             </Button>
           </div>
         ) : (
@@ -419,58 +386,10 @@ export function ReportPage() {
               </div>
             </div>
 
-            {/* AI Analysis indicator */}
-            {aiAnalysis && aiAnalysis.confidence > 0 && (
-              <div className={`rounded-lg p-3 ${
-                aiAnalysis.isNewCategory
-                  ? 'bg-purple-50 border border-purple-200'
-                  : 'bg-emerald-50 border border-emerald-200'
-              }`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className={`w-5 h-5 ${aiAnalysis.isNewCategory ? 'text-purple-600' : 'text-emerald-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <span className={`text-sm font-medium ${aiAnalysis.isNewCategory ? 'text-purple-700' : 'text-emerald-700'}`}>
-                    {aiAnalysis.isNewCategory ? 'New Category Detected' : 'AI-Detected Details'}
-                  </span>
-                  <span className={`text-xs ml-auto ${aiAnalysis.isNewCategory ? 'text-purple-600' : 'text-emerald-600'}`}>
-                    {Math.round(aiAnalysis.confidence * 100)}% confidence
-                  </span>
-                </div>
-                {aiAnalysis.isNewCategory && (
-                  <div className="mb-2 px-2 py-1 bg-purple-100 rounded text-xs text-purple-700">
-                    Category: <strong>{aiAnalysis.categoryLabel}</strong> (new)
-                  </div>
-                )}
-                {aiAnalysis.details.length > 0 && (
-                  <ul className="text-xs text-gray-600 space-y-1">
-                    {aiAnalysis.details.map((detail, index) => (
-                      <li key={index} className="flex items-start gap-1">
-                        <span className={aiAnalysis.isNewCategory ? 'text-purple-500' : 'text-emerald-500'}>•</span>
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Review and adjust the details below as needed.
-                </p>
-              </div>
-            )}
-
             {/* Form */}
             <ReportForm
               onSubmit={handleSubmit}
               isLoading={isSubmitting}
-              initialValues={aiAnalysis ? {
-                title: aiAnalysis.title,
-                description: aiAnalysis.description,
-                category: aiAnalysis.category
-              } : undefined}
-              customCategory={aiAnalysis?.isNewCategory ? {
-                value: aiAnalysis.category,
-                label: aiAnalysis.categoryLabel
-              } : undefined}
             />
 
             {error && (
