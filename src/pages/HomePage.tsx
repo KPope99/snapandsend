@@ -104,18 +104,19 @@ export function HomePage() {
           </h1>
         </div>
 
-        {/* Prominent Create Incident Button */}
-        <button
-          onClick={() => navigate('/report')}
-          className="w-full mt-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center shadow-lg transition-all active:scale-[0.98]"
-        >
-          Report New Incident
-        </button>
       </header>
 
       {/* Tagline & 3 Step Process */}
       <div className="flex-1 overflow-y-auto bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 py-10">
+          {/* Prominent Create Incident Button */}
+          <button
+            onClick={() => navigate('/report')}
+            className="w-full mb-8 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center shadow-lg transition-all active:scale-[0.98]"
+          >
+            Report New Incident
+          </button>
+
           <h2 className="text-gray-500 text-center text-xl font-bold italic mb-4 px-2" style={{ fontFamily: 'Georgia, serif' }}>
             "We connect communities to problem-solving authorities and Fixers"
           </h2>
