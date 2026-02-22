@@ -77,33 +77,27 @@ export function HomePage() {
       )}
 
       {/* Top Navigation Bar */}
-      <nav className="bg-emerald-600 text-white px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-sm font-medium hover:text-emerald-100 transition-colors">
-              Home
-            </Link>
-            <Link to="/my-reports" className="text-sm font-medium hover:text-emerald-100 transition-colors">
-              My Reports
-            </Link>
-          </div>
-          <Link
-            to="/profile"
-            className="text-sm font-medium hover:text-emerald-100 transition-colors"
-          >
-            {user ? 'Profile' : 'Login'}
-          </Link>
+      <nav className="bg-emerald-600 text-white px-4 py-3">
+        <div className="flex items-center justify-center">
+          <h1 className="text-3xl font-black tracking-wider metallic-white">
+            SnapAndSend
+          </h1>
         </div>
       </nav>
 
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-black tracking-wider metallic-green">
-            SnapAndSend
-          </h1>
+        <div className="flex items-center justify-end gap-5">
+          <Link to="/" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
+            Home
+          </Link>
+          <Link to="/my-reports" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
+            My Reports
+          </Link>
+          <Link to="/profile" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
+            {user ? 'Profile' : 'Login'}
+          </Link>
         </div>
-
       </header>
 
       {/* Tagline & 3 Step Process */}
