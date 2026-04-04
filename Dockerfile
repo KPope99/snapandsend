@@ -21,16 +21,21 @@ COPY --from=builder /app/server ./server
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/tsconfig*.json ./
 
-RUN npm install -g tsx prisma
+# Install tsx globally (use project's local prisma, not global)
+RUN npm install -g tsx
 
-# Create uploads directory
-RUN mkdir -p uploads
+# Generate Prisma client using project's local prisma
+RUN npx prisma generate
+
+# Create uploads and data directories
+RUN mkdir -p uploads data
 
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV SERVER_PORT=8080
+ENV DATABASE_URL="file:/app/data/prod.db"
 
 EXPOSE 8080
 
-# Run DB migrations then start server
-CMD ["sh", "-c", "prisma db push && tsx server/index.ts"]
+# Run DB migrations with local prisma then start server
+CMD ["sh", "-c", "npx prisma db push && tsx server/index.ts"]
