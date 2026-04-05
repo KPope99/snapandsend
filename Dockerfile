@@ -43,4 +43,4 @@ ENV DATABASE_URL="file:/app/data/prod.db"
 EXPOSE 8080
 
 # Skip prisma generate at startup — already done at build time
-CMD ["sh", "-c", "npx prisma db push --skip-generate && tsx server/index.ts"]
+CMD ["sh", "-c", "npx prisma db push --skip-generate && tsx server/scripts/init-db.ts && tsx server/index.ts"]
