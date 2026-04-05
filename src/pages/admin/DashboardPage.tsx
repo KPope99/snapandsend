@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Incident, IncidentStats, IncidentStatus } from '../../types/incident';
 import { getIncidents, getStats } from '../../services/incidentApi';
 import { IncidentCard } from '../../components/admin/IncidentCard';
@@ -8,7 +7,6 @@ import { NotificationBanner } from '../../components/admin/NotificationBanner';
 import { useStaffAuth } from '../../context/StaffAuthContext';
 
 export function DashboardPage() {
-  const navigate = useNavigate();
   const { staff, logout } = useStaffAuth();
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [stats, setStats] = useState<IncidentStats | null>(null);
@@ -19,7 +17,6 @@ export function DashboardPage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/admin/login');
   };
 
   const fetchData = useCallback(async () => {
