@@ -115,6 +115,34 @@ router.post('/members', requireStaffAuth, requireAdmin, async (req: Request, res
   }
 });
 
+// PUT /api/staff/members/:id/password (admin can change any; staff can change own)
+router.put('/members/:id/password', requireStaffAuth, async (req: StaffRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    // Must be admin or changing own password
+    if (!req.isAdmin && req.staffId !== id) {
+      return res.status(403).json({ error: 'You can only change your own password' });
+    }
+
+    const member = await prisma.staffMember.findUnique({ where: { id } });
+    if (!member) return res.status(404).json({ error: 'Staff member not found' });
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.staffMember.update({ where: { id }, data: { password: hashed } });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Change password error:', err);
+    return res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
 // DELETE /api/staff/members/:id (admin only)
 router.delete('/members/:id', requireStaffAuth, requireAdmin, async (req: StaffRequest, res: Response) => {
   try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useStaffAuth, StaffMember, STAFF_CATEGORIES } from '../../context/StaffAuthContext';
 
 interface ManageStaffModalProps {
@@ -6,7 +6,7 @@ interface ManageStaffModalProps {
 }
 
 export function ManageStaffModal({ onClose }: ManageStaffModalProps) {
-  const { createStaff, listStaff, deleteStaff } = useStaffAuth();
+  const { createStaff, listStaff, deleteStaff, changePassword, staff: currentStaff } = useStaffAuth();
 
   const [members, setMembers] = useState<StaffMember[]>([]);
   const [isLoadingList, setIsLoadingList] = useState(true);
@@ -20,6 +20,12 @@ export function ManageStaffModal({ onClose }: ManageStaffModalProps) {
   const [formError, setFormError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [changingPasswordId, setChangingPasswordId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const nonAdminCategories = STAFF_CATEGORIES.filter(c => c.value !== 'all');
 
@@ -64,6 +70,33 @@ export function ManageStaffModal({ onClose }: ManageStaffModalProps) {
     await deleteStaff(id);
     setDeletingId(null);
     setMembers(prev => prev.filter(m => m.id !== id));
+  };
+
+  const openChangePassword = (id: string) => {
+    setChangingPasswordId(id);
+    setNewPassword('');
+    setPasswordError('');
+    setPasswordSuccess('');
+    setTimeout(() => passwordInputRef.current?.focus(), 50);
+  };
+
+  const handleChangePassword = async (id: string) => {
+    setPasswordError('');
+    setPasswordSuccess('');
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+    setIsSavingPassword(true);
+    const result = await changePassword(id, newPassword);
+    setIsSavingPassword(false);
+    if (!result.success) {
+      setPasswordError(result.error || 'Failed to change password');
+    } else {
+      setPasswordSuccess('Password updated successfully');
+      setNewPassword('');
+      setTimeout(() => { setChangingPasswordId(null); setPasswordSuccess(''); }, 1500);
+    }
   };
 
   const getCategoryLabel = (value: string) =>
@@ -121,41 +154,85 @@ export function ManageStaffModal({ onClose }: ManageStaffModalProps) {
             ) : (
               <div className="space-y-3">
                 {members.map(member => (
-                  <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                        <span className="text-sm font-semibold text-gray-600">
-                          {member.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-900 truncate">{member.name}</p>
-                          {member.isAdmin && (
-                            <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-gray-900 text-white rounded">
-                              ADMIN
-                            </span>
-                          )}
+                  <div key={member.id} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                    <div className="flex items-center justify-between p-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                          <span className="text-sm font-semibold text-gray-600">
+                            {member.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
-                        <p className="text-xs text-gray-500 truncate">{member.email}</p>
-                        <p className="text-xs text-gray-400">{getCategoryLabel(member.category)}</p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900 truncate">{member.name}</p>
+                            {member.isAdmin && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-gray-900 text-white rounded">
+                                ADMIN
+                              </span>
+                            )}
+                            {member.id === currentStaff?.id && (
+                              <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500 truncate">{member.email}</p>
+                          <p className="text-xs text-gray-400">{getCategoryLabel(member.category)}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2 shrink-0">
+                        <button
+                          onClick={() => changingPasswordId === member.id ? setChangingPasswordId(null) : openChangePassword(member.id)}
+                          className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                          title="Change password"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                        </button>
+                        {!member.isAdmin && (
+                          <button
+                            onClick={() => handleDelete(member.id)}
+                            disabled={deletingId === member.id}
+                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="Remove staff member"
+                          >
+                            {deletingId === member.id ? (
+                              <div className="w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
+                            ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
-                    {!member.isAdmin && (
-                      <button
-                        onClick={() => handleDelete(member.id)}
-                        disabled={deletingId === member.id}
-                        className="ml-3 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 shrink-0"
-                        title="Remove staff member"
-                      >
-                        {deletingId === member.id ? (
-                          <div className="w-4 h-4 border-2 border-red-300 border-t-red-500 rounded-full animate-spin" />
-                        ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        )}
-                      </button>
+
+                    {/* Inline change password form */}
+                    {changingPasswordId === member.id && (
+                      <div className="px-3 pb-3 pt-1 border-t border-gray-200 bg-white">
+                        <p className="text-xs font-medium text-gray-600 mb-2">Change Password</p>
+                        <div className="flex gap-2">
+                          <input
+                            ref={passwordInputRef}
+                            type="password"
+                            value={newPassword}
+                            onChange={e => { setNewPassword(e.target.value); setPasswordError(''); }}
+                            placeholder="New password (min 8 chars)"
+                            className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+                          />
+                          <button
+                            onClick={() => handleChangePassword(member.id)}
+                            disabled={isSavingPassword}
+                            className="px-3 py-1.5 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-50 shrink-0"
+                          >
+                            {isSavingPassword ? '...' : 'Save'}
+                          </button>
+                        </div>
+                        {passwordError && <p className="mt-1 text-xs text-red-500">{passwordError}</p>}
+                        {passwordSuccess && <p className="mt-1 text-xs text-green-600">{passwordSuccess}</p>}
+                      </div>
                     )}
                   </div>
                 ))}

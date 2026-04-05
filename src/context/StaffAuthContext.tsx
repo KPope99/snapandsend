@@ -27,6 +27,7 @@ interface StaffAuthContextType {
   createStaff: (name: string, email: string, password: string, category: string) => Promise<{ success: boolean; error?: string }>;
   listStaff: () => Promise<StaffMember[]>;
   deleteStaff: (id: string) => Promise<{ success: boolean; error?: string }>;
+  changePassword: (id: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const StaffAuthContext = createContext<StaffAuthContextType | undefined>(undefined);
@@ -122,6 +123,21 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     return res.json();
   };
 
+  const changePassword = async (id: string, newPassword: string) => {
+    try {
+      const res = await fetch(`/api/staff/members/${id}/password`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to change password' };
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
   const deleteStaff = async (id: string) => {
     try {
       const res = await fetch(`/api/staff/members/${id}`, { method: 'DELETE', headers: authHeaders() });
@@ -145,6 +161,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
       createStaff,
       listStaff,
       deleteStaff,
+      changePassword,
     }}>
       {children}
     </StaffAuthContext.Provider>
