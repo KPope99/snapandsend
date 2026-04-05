@@ -22,8 +22,11 @@ const PORT = process.env.SERVER_PORT || 5002;
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded images
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded images from persistent storage in production
+const uploadsPath = process.env.NODE_ENV === 'production'
+  ? '/home/uploads'
+  : path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // API routes
 app.use('/api/reports', reportsRouter);

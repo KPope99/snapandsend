@@ -4,14 +4,17 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import { analyzeImageForReport } from '../services/vision.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = Router();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, '../../uploads');
+// In production use persistent Azure storage, otherwise local uploads folder
+const uploadsDir = process.env.NODE_ENV === 'production'
+  ? '/home/uploads'
+  : path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -58,6 +61,28 @@ router.post('/upload', upload.array('images', 5), (req: Request, res: Response) 
   } catch (error) {
     console.error('Error uploading images:', error);
     res.status(500).json({ error: 'Failed to upload images' });
+  }
+});
+
+// Analyze an uploaded image with AI to suggest title, description, and category
+router.post('/analyze', async (req: Request, res: Response) => {
+  const { imageUrl } = req.body;
+
+  if (!imageUrl) {
+    return res.status(400).json({ error: 'imageUrl is required' });
+  }
+
+  try {
+    const port = process.env.SERVER_PORT || 5002;
+    const absoluteUrl = imageUrl.startsWith('/')
+      ? `http://localhost:${port}${imageUrl}`
+      : imageUrl;
+
+    const analysis = await analyzeImageForReport(absoluteUrl);
+    res.json(analysis);
+  } catch (error) {
+    console.error('Image analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze image' });
   }
 });
 

@@ -33,14 +33,13 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 RUN npm install -g tsx
-RUN mkdir -p uploads data
 
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV SERVER_PORT=8080
-ENV DATABASE_URL="file:/app/data/prod.db"
 
 EXPOSE 8080
 
-# Skip prisma generate at startup — already done at build time
-CMD ["sh", "-c", "npx prisma db push --skip-generate && tsx server/scripts/init-db.ts && tsx server/index.ts"]
+# Create persistent dirs at startup (/home is mounted as Azure persistent storage)
+# DATABASE_URL is set via Azure App Service environment variable
+CMD ["sh", "-c", "mkdir -p /home/data /home/uploads && npx prisma db push --skip-generate && tsx server/scripts/init-db.ts && tsx server/index.ts"]
