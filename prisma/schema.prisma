@@ -119,6 +119,19 @@ model StatusLog {
   @@index([reportId])
 }
 
+model StaffMember {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  category  String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
 model ReportAnalysis {
   id                String   @id @default(cuid())
   reportId          String   @unique

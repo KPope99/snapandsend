@@ -1,18 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useStaffAuth, STAFF_CATEGORIES } from '../../context/StaffAuthContext';
-
-type Mode = 'login' | 'register';
+import { useStaffAuth } from '../../context/StaffAuthContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, register } = useStaffAuth();
+  const { login } = useStaffAuth();
 
-  const [mode, setMode] = useState<Mode>('login');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [category, setCategory] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,32 +15,12 @@ export function LoginPage() {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
     try {
-      if (mode === 'login') {
-        const success = await login(email, password);
-        if (success) {
-          navigate('/admin');
-        } else {
-          setError('Invalid email or password');
-        }
+      const result = await login(email, password);
+      if (result.success) {
+        navigate('/admin');
       } else {
-        if (!name.trim()) {
-          setError('Name is required');
-          setIsLoading(false);
-          return;
-        }
-        if (!category) {
-          setError('Please select a category');
-          setIsLoading(false);
-          return;
-        }
-        const success = await register(name, email, password, category);
-        if (success) {
-          navigate('/admin');
-        } else {
-          setError('Email already registered');
-        }
+        setError(result.error || 'Invalid email or password');
       }
     } catch {
       setError('An error occurred. Please try again.');
@@ -65,57 +40,14 @@ export function LoginPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-black tracking-wider metallic-grey">Incident Response</h1>
-          <p className="text-gray-400 text-xs mt-1">Command Center</p>
+          <p className="text-gray-400 text-xs mt-1">Staff Access Only</p>
         </div>
 
         {/* Form */}
-        <div className="px-5 py-5">
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-5">
-            <button
-              type="button"
-              onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                mode === 'login'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('register'); setError(''); }}
-              className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                mode === 'register'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Register
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {mode === 'register' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Full Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-                  placeholder="Enter your full name"
-                  required
-                />
-              </div>
-            )}
-
+        <div className="px-5 py-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
               <input
                 type="email"
                 value={email}
@@ -123,13 +55,12 @@ export function LoginPage() {
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 placeholder="Enter your email"
                 required
+                autoComplete="email"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password"
                 value={password}
@@ -137,33 +68,9 @@ export function LoginPage() {
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
                 placeholder="Enter your password"
                 required
-                minLength={6}
+                autoComplete="current-password"
               />
             </div>
-
-            {mode === 'register' && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Department / Category
-                </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent bg-white"
-                  required
-                >
-                  <option value="">Select your department</option>
-                  {STAFF_CATEGORIES.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[11px] text-gray-500 mt-1">
-                  You will only see incidents related to your department
-                </p>
-              </div>
-            )}
 
             {error && (
               <div className="bg-red-50 text-red-600 text-xs px-3 py-2 rounded-lg">
@@ -182,32 +89,20 @@ export function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  Processing...
+                  Signing in...
                 </span>
-              ) : mode === 'login' ? (
-                'Sign In'
-              ) : (
-                'Create Account'
-              )}
+              ) : 'Sign In'}
             </button>
-
-            {mode === 'login' && (
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => navigate('/forgot-password')}
-                  className="text-xs text-gray-500 hover:text-gray-800 transition-colors"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            )}
           </form>
+
+          <p className="mt-4 text-center text-xs text-gray-400">
+            Access is restricted to authorised staff only.
+          </p>
         </div>
 
         {/* Footer */}
         <div className="px-5 py-3 bg-gray-50 text-center">
-          <p className="text-[11px] text-gray-500">&copy; Tech84 - Incident Response Command Center</p>
+          <p className="text-[11px] text-gray-500">&copy; Tech84 — Incident Response Command Center</p>
         </div>
       </div>
     </div>

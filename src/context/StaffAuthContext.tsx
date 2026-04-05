@@ -6,17 +6,27 @@ export interface Staff {
   email: string;
   category: string;
   categoryLabel: string;
+  isAdmin: boolean;
 }
 
-const ADMIN_EMAIL = 'olu.oshaa@gmail.com';
+export interface StaffMember {
+  id: string;
+  name: string;
+  email: string;
+  category: string;
+  isAdmin: boolean;
+  createdAt: string;
+}
 
 interface StaffAuthContextType {
   staff: Staff | null;
   isAuthenticated: boolean;
   isAdmin: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, category: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  createStaff: (name: string, email: string, password: string, category: string) => Promise<{ success: boolean; error?: string }>;
+  listStaff: () => Promise<StaffMember[]>;
+  deleteStaff: (id: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const StaffAuthContext = createContext<StaffAuthContextType | undefined>(undefined);
@@ -34,56 +44,108 @@ export const STAFF_CATEGORIES = [
   { value: 'all', label: 'All Categories (Admin)' },
 ];
 
+function getCategoryLabel(category: string): string {
+  return STAFF_CATEGORIES.find(c => c.value === category)?.label || category;
+}
+
+function getToken(): string | null {
+  return localStorage.getItem('staff_jwt');
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json' };
+}
+
 export function StaffAuthProvider({ children }: { children: ReactNode }) {
   const [staff, setStaff] = useState<Staff | null>(null);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem('incident_response_staff');
-    if (stored) {
-      try { setStaff(JSON.parse(stored)); }
-      catch { localStorage.removeItem('incident_response_staff'); }
-    }
+    const token = getToken();
+    if (!token) { setChecked(true); return; }
+
+    fetch('/api/staff/me', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setStaff({ ...data, categoryLabel: getCategoryLabel(data.category) });
+        } else {
+          localStorage.removeItem('staff_jwt');
+        }
+      })
+      .catch(() => localStorage.removeItem('staff_jwt'))
+      .finally(() => setChecked(true));
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('incident_response_users') || '[]');
-    const user = users.find((u: any) => u.email === email && u.password === password);
-    if (user) {
-      const staffData: Staff = {
-        id: user.id, name: user.name, email: user.email, category: user.category,
-        categoryLabel: STAFF_CATEGORIES.find(c => c.value === user.category)?.label || user.category,
-      };
-      setStaff(staffData);
-      localStorage.setItem('incident_response_staff', JSON.stringify(staffData));
-      return true;
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/staff/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Login failed' };
+
+      localStorage.setItem('staff_jwt', data.token);
+      setStaff({ ...data.staff, categoryLabel: getCategoryLabel(data.staff.category) });
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Network error. Please try again.' };
     }
-    return false;
-  };
-
-  const register = async (name: string, email: string, password: string, category: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('incident_response_users') || '[]');
-    if (users.some((u: any) => u.email === email)) return false;
-
-    const newUser = { id: `staff_${Date.now()}`, name, email, password, category, createdAt: new Date().toISOString() };
-    users.push(newUser);
-    localStorage.setItem('incident_response_users', JSON.stringify(users));
-
-    const staffData: Staff = {
-      id: newUser.id, name: newUser.name, email: newUser.email, category: newUser.category,
-      categoryLabel: STAFF_CATEGORIES.find(c => c.value === category)?.label || category,
-    };
-    setStaff(staffData);
-    localStorage.setItem('incident_response_staff', JSON.stringify(staffData));
-    return true;
   };
 
   const logout = () => {
     setStaff(null);
-    localStorage.removeItem('incident_response_staff');
+    localStorage.removeItem('staff_jwt');
   };
 
+  const createStaff = async (name: string, email: string, password: string, category: string) => {
+    try {
+      const res = await fetch('/api/staff/members', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ name, email, password, category }),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to create staff' };
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  const listStaff = async (): Promise<StaffMember[]> => {
+    const res = await fetch('/api/staff/members', { headers: authHeaders() });
+    if (!res.ok) throw new Error('Failed to fetch staff');
+    return res.json();
+  };
+
+  const deleteStaff = async (id: string) => {
+    try {
+      const res = await fetch(`/api/staff/members/${id}`, { method: 'DELETE', headers: authHeaders() });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.error || 'Failed to delete' };
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Network error. Please try again.' };
+    }
+  };
+
+  if (!checked) return null;
+
   return (
-    <StaffAuthContext.Provider value={{ staff, isAuthenticated: !!staff, isAdmin: staff?.email === ADMIN_EMAIL, login, register, logout }}>
+    <StaffAuthContext.Provider value={{
+      staff,
+      isAuthenticated: !!staff,
+      isAdmin: !!staff?.isAdmin,
+      login,
+      logout,
+      createStaff,
+      listStaff,
+      deleteStaff,
+    }}>
       {children}
     </StaffAuthContext.Provider>
   );

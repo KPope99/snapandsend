@@ -12,6 +12,7 @@ import authRouter from './routes/auth.js';
 import locationRouter from './routes/location.js';
 import externalRouter from './routes/external.js';
 import analysisRouter from './routes/analysis.js';
+import staffRouter from './routes/staff.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,9 @@ app.use('/api/external', externalRouter);
 
 // AI analysis for admin portal
 app.use('/api/analysis', analysisRouter);
+
+// Staff auth and management
+app.use('/api/staff', staffRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
