@@ -111,14 +111,20 @@ export function ReportPage() {
       return;
     }
 
-    // Validate location based on mode
-    if (locationMode === 'gps' && !location) {
-      setError('GPS location not available. Please enable location services or use manual location.');
+    // If GPS denied, switch to manual instead of blocking
+    if (locationMode === 'gps' && (permissionDenied || (!location && !locationLoading))) {
+      setLocationMode('manual');
+      setError('Please enter your location below.');
+      return;
+    }
+
+    if (locationMode === 'gps' && locationLoading) {
+      setError('Still getting your location, please wait a moment.');
       return;
     }
 
     if (locationMode === 'manual' && !manualAddress.trim()) {
-      setError('Please enter a location address');
+      setError('Please enter a location address.');
       return;
     }
 
@@ -319,12 +325,8 @@ export function ReportPage() {
                       <span className="text-sm text-gray-500">Getting location...</span>
                     ) : locationError ? (
                       <div>
-                        <span className="text-sm text-red-500">{locationError}</span>
-                        {permissionDenied ? (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Enable location in your browser settings, or switch to <button onClick={() => setLocationMode('manual')} className="text-emerald-600 underline font-medium">Manual</button> mode.
-                          </p>
-                        ) : (
+                        <span className="text-sm text-gray-500">{locationError}</span>
+                        {!permissionDenied && (
                           <button onClick={refreshLocation} className="ml-2 text-sm text-emerald-600 underline">
                             Retry
                           </button>
@@ -341,6 +343,14 @@ export function ReportPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
+                  {permissionDenied && (
+                    <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <svg className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="text-xs text-amber-700">Location access denied. Type the address where this happened.</p>
+                    </div>
+                  )}
                   <Input
                     placeholder="Enter address or landmark (e.g., Main Street, near GTBank)"
                     value={manualAddress}
