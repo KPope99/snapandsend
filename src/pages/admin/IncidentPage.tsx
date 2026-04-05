@@ -64,27 +64,25 @@ export function IncidentPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link
-              to="/admin"
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        <div className="max-w-5xl mx-auto px-4 pt-3 pb-4">
+          <Link
+            to="/admin"
+            className="inline-flex items-center gap-2 px-3 py-1.5 mb-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Incidents
+          </Link>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              Back to Incidents
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-900 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900">Incident Details</h1>
-                <p className="text-sm text-gray-500">ID: {incident.id}</p>
-              </div>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Incident Details</h1>
+              <p className="text-sm text-gray-500">ID: {incident.id}</p>
             </div>
           </div>
         </div>
