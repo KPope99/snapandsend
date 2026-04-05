@@ -118,3 +118,16 @@ model StatusLog {
 
   @@index([reportId])
 }
+
+model ReportAnalysis {
+  id                String   @id @default(cuid())
+  reportId          String   @unique
+  summary           String
+  severity          String
+  assessmentDetails String
+  suggestedActions  String
+  estimatedScope    String
+  analyzedAt        DateTime @default(now())
+
+  @@index([reportId])
+}

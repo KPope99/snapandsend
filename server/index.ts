@@ -11,6 +11,7 @@ import imagesRouter from './routes/images.js';
 import authRouter from './routes/auth.js';
 import locationRouter from './routes/location.js';
 import externalRouter from './routes/external.js';
+import analysisRouter from './routes/analysis.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -32,6 +33,9 @@ app.use('/api/location', locationRouter);
 
 // External API for integrations (police, authorities, etc.)
 app.use('/api/external', externalRouter);
+
+// AI analysis for admin portal
+app.use('/api/analysis', analysisRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
