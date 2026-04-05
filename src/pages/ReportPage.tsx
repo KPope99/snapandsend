@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CameraCapture } from '../components/camera/CameraCapture';
 import { ImageUploader } from '../components/camera/ImageUploader';
@@ -27,6 +27,8 @@ export function ReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<ImageAnalysis | null>(null);
+  // Cache uploaded URLs to avoid re-uploading on submit
+  const uploadedUrlsCache = useRef<Map<File, string>>(new Map());
 
   // Location mode state - default to manual if permission already denied
   const [locationMode, setLocationMode] = useState<LocationMode>(permissionDenied ? 'manual' : 'gps');
@@ -51,7 +53,10 @@ export function ReportPage() {
 
     fetch('/api/images/upload', { method: 'POST', body: formData })
       .then(r => r.json())
-      .then(data => analyzeImage(data.imageUrls[0]))
+      .then(data => {
+        uploadedUrlsCache.current.set(file, data.imageUrls[0]);
+        return analyzeImage(data.imageUrls[0]);
+      })
       .then(analysis => setAiSuggestions(analysis))
       .catch(() => { /* analysis is optional, ignore errors */ })
       .finally(() => setIsAnalyzing(false));
@@ -94,7 +99,10 @@ export function ReportPage() {
 
   const handleRemoveImage = useCallback((index: number) => {
     setImagePreview(prev => prev.filter((_, i) => i !== index));
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImageFiles(prev => {
+      uploadedUrlsCache.current.delete(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
   }, []);
 
   const handleContinue = () => {
@@ -163,7 +171,12 @@ export function ReportPage() {
     setError(null);
 
     try {
-      const imageUrls = await uploadImages(imageFiles);
+      // Use cached URLs for images already uploaded during AI analysis; upload the rest in one batch
+      const cachedUrls = imageFiles.map(f => uploadedUrlsCache.current.get(f));
+      const filesToUpload = imageFiles.filter((_, i) => !cachedUrls[i]);
+      const newUrls = filesToUpload.length > 0 ? await uploadImages(filesToUpload) : [];
+      let newUrlIdx = 0;
+      const imageUrls = cachedUrls.map(cached => cached ?? newUrls[newUrlIdx++]);
 
       // Create report
       const result = await createReport({
