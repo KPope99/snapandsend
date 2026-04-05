@@ -8,7 +8,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadImages, createReport, reverseGeocode } from '../services/api';
+import { uploadImages, createReport, reverseGeocode, analyzeImage, ImageAnalysis } from '../services/api';
 import { ReportCategory } from '../types';
 
 type Step = 'capture' | 'form';
@@ -25,6 +25,8 @@ export function ReportPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<ImageAnalysis | null>(null);
 
   // Location mode state - default to manual if permission already denied
   const [locationMode, setLocationMode] = useState<LocationMode>(permissionDenied ? 'manual' : 'gps');
@@ -39,6 +41,22 @@ export function ReportPage() {
     }
   }, [permissionDenied]);
 
+  // Upload a single file and trigger AI analysis on the first image
+  const uploadAndAnalyze = useCallback((file: File) => {
+    const formData = new FormData();
+    formData.append('images', file);
+
+    setIsAnalyzing(true);
+    setAiSuggestions(null);
+
+    fetch('/api/images/upload', { method: 'POST', body: formData })
+      .then(r => r.json())
+      .then(data => analyzeImage(data.imageUrls[0]))
+      .then(analysis => setAiSuggestions(analysis))
+      .catch(() => { /* analysis is optional, ignore errors */ })
+      .finally(() => setIsAnalyzing(false));
+  }, []);
+
   const handleCapture = useCallback((dataUrl: string) => {
     setShowCamera(false);
 
@@ -47,10 +65,13 @@ export function ReportPage() {
       .then(res => res.blob())
       .then(blob => {
         const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        setImageFiles(prev => [...prev, file]);
+        setImageFiles(prev => {
+          if (prev.length === 0) uploadAndAnalyze(file);
+          return [...prev, file];
+        });
         setImagePreview(prev => [...prev, dataUrl]);
       });
-  }, []);
+  }, [uploadAndAnalyze]);
 
   const handleFileSelect = useCallback((files: File[]) => {
     const newPreviews: string[] = [];
@@ -61,12 +82,15 @@ export function ReportPage() {
         newPreviews.push(reader.result as string);
         if (newPreviews.length === files.length) {
           setImagePreview(prev => [...prev, ...newPreviews]);
-          setImageFiles(prev => [...prev, ...files]);
+          setImageFiles(prev => {
+            if (prev.length === 0 && files.length > 0) uploadAndAnalyze(files[0]);
+            return [...prev, ...files];
+          });
         }
       };
       reader.readAsDataURL(file);
     });
-  }, []);
+  }, [uploadAndAnalyze]);
 
   const handleRemoveImage = useCallback((index: number) => {
     setImagePreview(prev => prev.filter((_, i) => i !== index));
@@ -390,6 +414,16 @@ export function ReportPage() {
             <ReportForm
               onSubmit={handleSubmit}
               isLoading={isSubmitting}
+              isAnalyzing={isAnalyzing}
+              initialValues={aiSuggestions ? {
+                title: aiSuggestions.title,
+                description: aiSuggestions.description,
+                category: aiSuggestions.category as ReportCategory,
+              } : undefined}
+              customCategory={aiSuggestions?.isNewCategory ? {
+                value: aiSuggestions.category,
+                label: aiSuggestions.categoryLabel,
+              } : undefined}
             />
 
             {error && (

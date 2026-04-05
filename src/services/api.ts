@@ -186,6 +186,29 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   return data.imageUrls;
 }
 
+// AI image analysis
+export interface ImageAnalysis {
+  title: string;
+  description: string;
+  category: string;
+  categoryLabel: string;
+  isNewCategory: boolean;
+}
+
+export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
+  const response = await fetch(`${API_BASE}/images/analyze`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to analyze image');
+  }
+
+  return response.json();
+}
+
 // Location
 export async function reverseGeocode(lat: number, lng: number): Promise<{ address: string }> {
   const response = await fetch(`${API_BASE}/location/reverse?lat=${lat}&lng=${lng}`);
