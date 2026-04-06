@@ -16,6 +16,7 @@ import { DashboardPage } from './pages/admin/DashboardPage';
 import { IncidentPage } from './pages/admin/IncidentPage';
 import { LoginPage } from './pages/admin/LoginPage';
 import { ForgotPasswordPage } from './pages/admin/ForgotPasswordPage';
+import { PageEditorPage } from './pages/admin/PageEditorPage';
 
 function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useStaffAuth();
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/admin/forgot-password" element={<ForgotPasswordPage />} />
                 <Route path="/admin" element={<ProtectedAdminRoute><DashboardPage /></ProtectedAdminRoute>} />
                 <Route path="/admin/incident/:id" element={<ProtectedAdminRoute><IncidentPage /></ProtectedAdminRoute>} />
+                <Route path="/admin/pages" element={<ProtectedAdminRoute><PageEditorPage /></ProtectedAdminRoute>} />
               </Routes>
             </div>
           </StaffAuthProvider>

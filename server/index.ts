@@ -13,6 +13,7 @@ import locationRouter from './routes/location.js';
 import externalRouter from './routes/external.js';
 import analysisRouter from './routes/analysis.js';
 import staffRouter from './routes/staff.js';
+import pagesRouter from './routes/pages.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,9 @@ app.use('/api/analysis', analysisRouter);
 
 // Staff auth and management
 app.use('/api/staff', staffRouter);
+
+// CMS page content
+app.use('/api/pages', pagesRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {

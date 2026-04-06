@@ -1,9 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Footer } from '../components/common/Footer';
+import { usePageContent } from '../hooks/usePageContent';
 
 const HOME_ICON = 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6';
 
+function Paragraphs({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('\n\n').map((p, i) => (
+        <p key={i} className={`text-sm text-gray-600 leading-relaxed ${i > 0 ? 'mt-3' : ''}`}>{p}</p>
+      ))}
+    </>
+  );
+}
+
 export function HowItWorksPage() {
+  const { t } = usePageContent('how-it-works');
   return (
     <div className="flex flex-col h-full">
       <nav className="bg-emerald-600 text-white px-4 py-3">
@@ -25,10 +37,8 @@ export function HowItWorksPage() {
 
         <div className="bg-emerald-600 text-white px-6 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200 mb-2">Simple by Design</p>
-          <h2 className="text-2xl font-black leading-snug mb-3">From Problem to Resolution in Three Steps</h2>
-          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">
-            SnapAndSend is built to be used in under 60 seconds, with no account, no forms, and no friction.
-          </p>
+          <h2 className="text-2xl font-black leading-snug mb-3">{t('hero_tagline')}</h2>
+          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">{t('hero_body')}</p>
         </div>
 
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-10">
@@ -38,27 +48,9 @@ export function HowItWorksPage() {
             <h3 className="text-lg font-bold text-gray-900 mb-5">The Three-Step Process</h3>
             <div className="space-y-5">
               {[
-                {
-                  step: '1',
-                  colour: 'sky',
-                  title: 'Snap',
-                  subtitle: 'Take a Photo of the Problem',
-                  body: 'Open SnapAndSend and use your phone camera to photograph the issue — a pothole, broken streetlight, illegal dumping, flooding, or any community hazard. A clear photo ensures faster action from authorities.',
-                },
-                {
-                  step: '2',
-                  colour: 'emerald',
-                  title: 'Send',
-                  subtitle: 'Submit Your Report',
-                  body: 'Add a short description, select the incident category, and confirm your location. Your report is submitted instantly to the relevant authorities and registered Fixers in your area. No account needed.',
-                },
-                {
-                  step: '3',
-                  colour: 'amber',
-                  title: 'Solve',
-                  subtitle: 'Track Progress to Resolution',
-                  body: 'Once submitted, your report enters our tracking system. You can follow its status from Pending through Investigating to Resolved — giving you full visibility on the actions being taken.',
-                },
+                { step: '1', colour: 'sky',     title: 'Snap', subtitle: 'Take a Photo of the Problem',    body: t('step_1') },
+                { step: '2', colour: 'emerald', title: 'Send', subtitle: 'Submit Your Report',              body: t('step_2') },
+                { step: '3', colour: 'amber',   title: 'Solve', subtitle: 'Track Progress to Resolution',  body: t('step_3') },
               ].map(({ step, colour, title, subtitle, body }) => (
                 <div key={step} className="flex gap-4 bg-white rounded-2xl shadow-sm p-5">
                   <div className={`flex-shrink-0 w-10 h-10 rounded-full bg-${colour}-100 flex items-center justify-center`}>
@@ -78,12 +70,7 @@ export function HowItWorksPage() {
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Collective Verification</h3>
             <div className="bg-white rounded-2xl shadow-sm p-5">
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                When multiple people in the same neighbourhood report the same issue independently, SnapAndSend automatically recognises the pattern and merges the reports into a single verified incident — amplifying community voice.
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Each additional submission adds weight to the incident, escalating its priority and increasing the likelihood of a swift response from authorities.
-              </p>
+              <Paragraphs text={t('verification')} />
             </div>
           </section>
 
@@ -112,12 +99,7 @@ export function HowItWorksPage() {
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Privacy & Anonymity</h3>
             <div className="bg-white rounded-2xl shadow-sm p-5">
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                You do not need to create an account to submit a report. SnapAndSend assigns an anonymous device identity so you can track your own submissions without exposing your personal information to other users or authorities.
-              </p>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Creating a profile is optional — it unlocks features like display names and persistent history across devices.
-              </p>
+              <Paragraphs text={t('privacy')} />
             </div>
           </section>
 

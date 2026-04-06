@@ -1,9 +1,21 @@
 import { Link } from 'react-router-dom';
 import { Footer } from '../components/common/Footer';
+import { usePageContent } from '../hooks/usePageContent';
 
 const HOME_ICON = 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6';
 
+function Paragraphs({ text }: { text: string }) {
+  return (
+    <>
+      {text.split('\n\n').map((p, i) => (
+        <p key={i} className={`text-sm text-gray-600 leading-relaxed ${i > 0 ? 'mt-3' : ''}`}>{p}</p>
+      ))}
+    </>
+  );
+}
+
 export function CollaboratePage() {
+  const { t } = usePageContent('collaborate');
   return (
     <div className="flex flex-col h-full">
       <nav className="bg-emerald-600 text-white px-4 py-3">
@@ -25,10 +37,8 @@ export function CollaboratePage() {
 
         <div className="bg-emerald-600 text-white px-6 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200 mb-2">Partnerships</p>
-          <h2 className="text-2xl font-black leading-snug mb-3">Build Better Communities, Together</h2>
-          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">
-            We are actively seeking partners who share our commitment to civic technology, community empowerment, and sustainable urban development.
-          </p>
+          <h2 className="text-2xl font-black leading-snug mb-3">{t('hero_tagline')}</h2>
+          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">{t('hero_body')}</p>
         </div>
 
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-10">
@@ -36,12 +46,7 @@ export function CollaboratePage() {
           {/* Why Partner */}
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Why Partner with SnapAndSend?</h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              SnapAndSend sits at the intersection of civic engagement and technology. As a growing platform with users actively reporting and tracking issues across communities, we offer partners a unique channel to engage citizens, demonstrate accountability, and drive measurable outcomes in public service delivery.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              We are an early-stage startup with ambition, agility, and a clear social mission. Partnering with us now means shaping the direction of the platform and getting ahead of the curve on community-first technology.
-            </p>
+            <Paragraphs text={t('why_partner')} />
           </section>
 
           {/* Who We're Looking For */}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Footer } from '../components/common/Footer';
+import { usePageContent } from '../hooks/usePageContent';
 
 const HOME_ICON = 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6';
 
@@ -81,6 +82,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export function HelpCentrePage() {
+  const { t } = usePageContent('help');
   return (
     <div className="flex flex-col h-full">
       <nav className="bg-emerald-600 text-white px-4 py-3">
@@ -102,10 +104,8 @@ export function HelpCentrePage() {
 
         <div className="bg-emerald-600 text-white px-6 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200 mb-2">Support</p>
-          <h2 className="text-2xl font-black leading-snug mb-3">How Can We Help?</h2>
-          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">
-            Find answers to common questions about submitting reports, tracking incidents, and getting the most from SnapAndSend.
-          </p>
+          <h2 className="text-2xl font-black leading-snug mb-3">{t('hero_tagline')}</h2>
+          <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">{t('hero_body')}</p>
         </div>
 
         <div className="max-w-2xl mx-auto px-6 py-8 space-y-8">

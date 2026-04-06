@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model PageContent {
+  slug      String   @id
+  sections  String   // JSON: { sectionKey: text }
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
 model User {
   id          String      @id @default(cuid())
   email       String?     @unique

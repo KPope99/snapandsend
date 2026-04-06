@@ -1,7 +1,19 @@
 import { Link } from 'react-router-dom';
 import { Footer } from '../components/common/Footer';
+import { usePageContent } from '../hooks/usePageContent';
+
+function Paragraphs({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <>
+      {text.split('\n\n').map((p, i) => (
+        <p key={i} className={`text-sm text-gray-600 leading-relaxed ${i > 0 ? 'mt-3' : ''} ${className}`}>{p}</p>
+      ))}
+    </>
+  );
+}
 
 export function AboutPage() {
+  const { t } = usePageContent('about');
   return (
     <div className="flex flex-col h-full">
       {/* Top Nav */}
@@ -29,10 +41,10 @@ export function AboutPage() {
         <div className="bg-emerald-600 text-white px-6 py-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-200 mb-2">Our Mission</p>
           <h2 className="text-2xl font-black leading-snug mb-3">
-            Connecting Communities to the People Who Fix Things
+            {t('hero_tagline')}
           </h2>
           <p className="text-emerald-100 text-sm leading-relaxed max-w-sm mx-auto">
-            SnapAndSend is a community-first platform that puts the power of civic accountability directly in your pocket.
+            {t('hero_body')}
           </p>
         </div>
 
@@ -41,23 +53,13 @@ export function AboutPage() {
           {/* Who We Are */}
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Who We Are</h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              We are <span className="font-semibold text-gray-800">Tech84</span> — a technology startup built on the belief that communities deserve better tools to communicate, collaborate, and create change. Founded by a team of engineers, civic advocates, and problem-solvers, we design software that bridges the gap between people who notice problems and the authorities and fixers who have the power to resolve them.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              SnapAndSend is our flagship product — a mobile-first incident reporting platform designed for everyday citizens to report infrastructure issues, environmental hazards, and community concerns quickly, simply, and effectively.
-            </p>
+            <Paragraphs text={t('who_we_are')} />
           </section>
 
           {/* The Problem We Solve */}
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">The Problem We Solve</h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              Across cities and towns, critical issues go unreported — not because people don't care, but because reporting is too cumbersome. Phone calls go unanswered. Emails disappear. Nothing gets done.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              We built SnapAndSend to remove that friction entirely. Three taps is all it takes to snap a photo, describe the issue, and get it in front of the right people — instantly.
-            </p>
+            <Paragraphs text={t('the_problem')} />
           </section>
 
           {/* Our Values */}
@@ -104,12 +106,7 @@ export function AboutPage() {
           {/* Where We're Going */}
           <section>
             <h3 className="text-lg font-bold text-gray-900 mb-3">Where We Are Going</h3>
-            <p className="text-sm text-gray-600 leading-relaxed mb-3">
-              We are an early-stage startup with a big vision. Today, SnapAndSend helps communities report and track local incidents. Tomorrow, we are building deeper integrations with local government systems, utility providers, and community organisations — creating a full-stack civic engagement layer that makes every neighbourhood smarter and more responsive.
-            </p>
-            <p className="text-sm text-gray-600 leading-relaxed">
-              We are actively seeking partnerships with local authorities, NGOs, urban planners, and impact investors who share our belief that technology can — and should — serve the public good.
-            </p>
+            <Paragraphs text={t('vision')} />
           </section>
 
           {/* CTA */}
