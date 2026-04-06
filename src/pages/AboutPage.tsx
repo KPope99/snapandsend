@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Footer } from '../components/common/Footer';
 
 export function AboutPage() {
   return (
@@ -126,10 +127,7 @@ export function AboutPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-gray-800 text-white px-4 py-4 text-center">
-        <p className="text-xs text-gray-400">&copy; {new Date().getFullYear()} Tech84. All rights reserved.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

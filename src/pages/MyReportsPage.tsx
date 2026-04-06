@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Footer } from '../components/common/Footer';
 import { ReportCard } from '../components/reports/ReportCard';
 import { useReports } from '../hooks/useReports';
 import { useAuth } from '../context/AuthContext';
@@ -119,10 +120,7 @@ export function MyReportsPage() {
         </div>
       )}
 
-      {/* Copyright */}
-      <div className="bg-gray-100 px-4 py-2 text-center text-xs text-gray-500">
-        © Tech84
-      </div>
+      <Footer />
     </div>
   );
 }
