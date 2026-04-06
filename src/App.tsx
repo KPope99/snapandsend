@@ -7,6 +7,7 @@ import { ReportPage } from './pages/ReportPage';
 import { ReportDetailPage } from './pages/ReportDetailPage';
 import { MyReportsPage } from './pages/MyReportsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { AboutPage } from './pages/AboutPage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { IncidentPage } from './pages/admin/IncidentPage';
 import { LoginPage } from './pages/admin/LoginPage';
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/report/:id" element={<ReportDetailPage />} />
                 <Route path="/my-reports" element={<MyReportsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/about" element={<AboutPage />} />
 
                 {/* Admin routes */}
                 <Route path="/admin/login" element={<LoginPage />} />

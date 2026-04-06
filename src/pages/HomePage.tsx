@@ -210,9 +210,9 @@ export function HomePage() {
       {/* Footer Links */}
       <footer className="bg-gray-800 text-white px-4 py-6">
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+          <Link to="/about" className="text-sm text-gray-300 hover:text-white transition-colors">
             About Us
-          </a>
+          </Link>
           <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
             How it Works
           </a>
