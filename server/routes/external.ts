@@ -333,6 +333,38 @@ router.patch('/incidents/:id/status', async (req: Request, res: Response) => {
 });
 
 /**
+ * DELETE /api/external/incidents/:id
+ * Delete an incident (admin only)
+ */
+router.delete('/incidents/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const incident = await prisma.report.findUnique({ where: { id } });
+
+    if (!incident) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Incident not found'
+      });
+    }
+
+    await prisma.report.delete({ where: { id } });
+
+    res.json({
+      success: true,
+      message: 'Incident deleted successfully'
+    });
+  } catch (error) {
+    console.error('External API - Delete incident error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to delete incident'
+    });
+  }
+});
+
+/**
  * GET /api/external/incidents/:id/history
  * Get status change history for an incident
  */
@@ -475,7 +507,7 @@ router.post('/webhooks', async (req: Request, res: Response) => {
       data: {
         partnerId: partner.id,
         url,
-        events: selectedEvents,
+        events: JSON.stringify(selectedEvents),
         secret: secret || null,
         isActive: true
       }

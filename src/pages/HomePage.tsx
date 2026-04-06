@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation as useRouterLocation, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useNavigate, useLocation as useRouterLocation } from 'react-router-dom';
 
 interface NotificationState {
   notification?: {
@@ -12,7 +11,6 @@ interface NotificationState {
 export function HomePage() {
   const navigate = useNavigate();
   const routerLocation = useRouterLocation();
-  const { user } = useAuth();
   const [notification, setNotification] = useState<{ type: string; message: string } | null>(null);
 
   // Handle notification from navigation state
@@ -84,21 +82,6 @@ export function HomePage() {
           </h1>
         </div>
       </nav>
-
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-end gap-5">
-          <Link to="/" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
-            Home
-          </Link>
-          <Link to="/my-reports" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
-            My Reports
-          </Link>
-          <Link to="/profile" className="text-sm font-medium text-gray-600 hover:text-emerald-600 transition-colors">
-            {user ? 'Profile' : 'Login'}
-          </Link>
-        </div>
-      </header>
 
       {/* Tagline & 3 Step Process */}
       <div className="flex-1 overflow-y-auto bg-gray-50">

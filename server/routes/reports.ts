@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getDistance } from '../services/geo.js';
+import { webhookEvents } from '../services/webhook.js';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -179,7 +180,7 @@ router.post('/', async (req: Request, res: Response) => {
 
       // Add new images to the existing report
       if (imageUrls && imageUrls.length > 0) {
-        await prisma.reportImage.createMany({
+        await prisma.image.createMany({
           data: imageUrls.map((url: string) => ({
             reportId: duplicateReport.id,
             imageUrl: url
@@ -242,6 +243,7 @@ router.post('/', async (req: Request, res: Response) => {
     });
 
     res.status(201).json({ ...report, merged: false });
+    webhookEvents.incidentCreated(report).catch(() => {});
   } catch (error) {
     console.error('Error creating report:', error);
     res.status(500).json({ error: 'Failed to create report' });

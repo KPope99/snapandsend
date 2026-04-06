@@ -85,12 +85,14 @@ export const webhookEvents = {
   incidentCreated: (incident: any) => triggerWebhooks('incident.created', {
     id: incident.id,
     title: incident.title,
+    description: incident.description,
     category: incident.category,
     location: {
       latitude: incident.latitude,
       longitude: incident.longitude,
       address: incident.address
     },
+    images: (incident.images || []).map((img: any) => ({ url: img.imageUrl })),
     createdAt: incident.createdAt
   }),
 
