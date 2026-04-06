@@ -8,6 +8,10 @@ import { ReportDetailPage } from './pages/ReportDetailPage';
 import { MyReportsPage } from './pages/MyReportsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { AboutPage } from './pages/AboutPage';
+import { HowItWorksPage } from './pages/HowItWorksPage';
+import { CollaboratePage } from './pages/CollaboratePage';
+import { FixersPage } from './pages/FixersPage';
+import { HelpCentrePage } from './pages/HelpCentrePage';
 import { DashboardPage } from './pages/admin/DashboardPage';
 import { IncidentPage } from './pages/admin/IncidentPage';
 import { LoginPage } from './pages/admin/LoginPage';
@@ -34,6 +38,10 @@ function App() {
                 <Route path="/my-reports" element={<MyReportsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/how-it-works" element={<HowItWorksPage />} />
+                <Route path="/collaborate" element={<CollaboratePage />} />
+                <Route path="/fixers" element={<FixersPage />} />
+                <Route path="/help" element={<HelpCentrePage />} />
 
                 {/* Admin routes */}
                 <Route path="/admin/login" element={<LoginPage />} />

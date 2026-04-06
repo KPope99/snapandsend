@@ -213,18 +213,18 @@ export function HomePage() {
           <Link to="/about" className="text-sm text-gray-300 hover:text-white transition-colors">
             About Us
           </Link>
-          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+          <Link to="/how-it-works" className="text-sm text-gray-300 hover:text-white transition-colors">
             How it Works
-          </a>
-          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+          </Link>
+          <Link to="/collaborate" className="text-sm text-gray-300 hover:text-white transition-colors">
             Collaborate with Us
-          </a>
-          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+          </Link>
+          <Link to="/fixers" className="text-sm text-gray-300 hover:text-white transition-colors">
             Fixers
-          </a>
-          <a href="#" className="text-sm text-gray-300 hover:text-white transition-colors">
+          </Link>
+          <Link to="/help" className="text-sm text-gray-300 hover:text-white transition-colors">
             Help Centre
-          </a>
+          </Link>
         </div>
         <div className="border-t border-gray-700 pt-4 text-center">
           <p className="text-xs text-gray-400">&copy; Tech84</p>
