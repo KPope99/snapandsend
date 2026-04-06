@@ -86,24 +86,24 @@ export function HomePage() {
       {/* Tagline & 3 Step Process */}
       <div className="flex-1 overflow-y-auto bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 py-10">
-          {/* Prominent Create Incident Button */}
-          <button
-            onClick={() => navigate('/report')}
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center shadow-lg transition-all active:scale-[0.98]"
-          >
-            Report New Incident
-          </button>
-
-          {/* My Incidents Link */}
-          <Link
-            to="/my-reports"
-            className="w-full mb-8 mt-3 border border-emerald-600 text-emerald-700 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors active:scale-[0.98]"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            My Incidents
-          </Link>
+          {/* Action Banner */}
+          <div className="mb-8 bg-white rounded-2xl shadow-md p-4 flex items-center gap-3">
+            <button
+              onClick={() => navigate('/report')}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center shadow transition-all active:scale-[0.98]"
+            >
+              Report New Incident
+            </button>
+            <Link
+              to="/my-reports"
+              className="flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-emerald-700 hover:bg-emerald-50 transition-colors active:scale-[0.98]"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span className="text-xs font-medium leading-tight text-center">My<br/>Incidents</span>
+            </Link>
+          </div>
 
           <h2 className="text-gray-500 text-center text-xl font-bold italic mb-4 px-2" style={{ fontFamily: 'Georgia, serif' }}>
             "We connect communities to problem-solving authorities and Fixers"

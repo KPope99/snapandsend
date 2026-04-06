@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ReportCard } from '../components/reports/ReportCard';
 import { useReports } from '../hooks/useReports';
 import { useAuth } from '../context/AuthContext';
@@ -36,7 +36,14 @@ export function MyReportsPage() {
     <div className="flex flex-col h-full pb-20">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3">
-        <h1 className="text-xl font-bold text-gray-900">My Reports</h1>
+        <div className="flex items-center gap-3 mb-1">
+          <Link to="/" className="text-gray-500 hover:text-emerald-600 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          </Link>
+          <h1 className="text-xl font-bold text-gray-900">My Incidents</h1>
+        </div>
 
         {/* Status filter */}
         <div className="flex gap-2 mt-3 overflow-x-auto pb-2 -mx-4 px-4">
