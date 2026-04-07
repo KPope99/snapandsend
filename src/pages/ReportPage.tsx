@@ -62,20 +62,14 @@ export function ReportPage() {
       .finally(() => setIsAnalyzing(false));
   }, []);
 
-  const handleCapture = useCallback((dataUrl: string) => {
+  const handleCapture = useCallback((file: File) => {
     setShowCamera(false);
-
-    // Convert data URL to File
-    fetch(dataUrl)
-      .then(res => res.blob())
-      .then(blob => {
-        const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        setImageFiles(prev => {
-          if (prev.length === 0) uploadAndAnalyze(file);
-          return [...prev, file];
-        });
-        setImagePreview(prev => [...prev, dataUrl]);
-      });
+    const previewUrl = URL.createObjectURL(file);
+    setImageFiles(prev => {
+      if (prev.length === 0) uploadAndAnalyze(file);
+      return [...prev, file];
+    });
+    setImagePreview(prev => [...prev, previewUrl]);
   }, [uploadAndAnalyze]);
 
   const handleFileSelect = useCallback((files: File[]) => {
