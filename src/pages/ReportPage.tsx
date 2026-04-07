@@ -79,26 +79,43 @@ export function ReportPage() {
   }, [uploadAndAnalyze]);
 
   const handleFileSelect = useCallback((files: File[]) => {
-    const newPreviews: string[] = [];
+    const previews: string[] = new Array(files.length);
+    let resolved = 0;
 
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        newPreviews.push(reader.result as string);
-        if (newPreviews.length === files.length) {
-          setImagePreview(prev => [...prev, ...newPreviews]);
-          setImageFiles(prev => {
-            if (prev.length === 0 && files.length > 0) uploadAndAnalyze(files[0]);
-            return [...prev, ...files];
-          });
-        }
-      };
-      reader.readAsDataURL(file);
+    const trySetState = () => {
+      resolved++;
+      if (resolved === files.length) {
+        setImagePreview(prev => [...prev, ...previews]);
+        setImageFiles(prev => {
+          if (prev.length === 0 && files.length > 0) uploadAndAnalyze(files[0]);
+          return [...prev, ...files];
+        });
+      }
+    };
+
+    files.forEach((file, i) => {
+      if (file.type.startsWith('video/')) {
+        // Use object URL for video previews (avoids large data URLs)
+        previews[i] = URL.createObjectURL(file);
+        trySetState();
+      } else {
+        const reader = new FileReader();
+        reader.onload = () => {
+          previews[i] = reader.result as string;
+          trySetState();
+        };
+        reader.readAsDataURL(file);
+      }
     });
   }, [uploadAndAnalyze]);
 
   const handleRemoveImage = useCallback((index: number) => {
-    setImagePreview(prev => prev.filter((_, i) => i !== index));
+    setImagePreview(prev => {
+      // Revoke object URLs created for video previews to free memory
+      const url = prev[index];
+      if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+      return prev.filter((_, i) => i !== index);
+    });
     setImageFiles(prev => {
       uploadedUrlsCache.current.delete(prev[index]);
       return prev.filter((_, i) => i !== index);
@@ -107,7 +124,7 @@ export function ReportPage() {
 
   const handleContinue = () => {
     if (imagePreview.length === 0) {
-      setError('Please add at least one image');
+      setError('Please add at least one photo or video');
       return;
     }
 
@@ -237,7 +254,7 @@ export function ReportPage() {
             </svg>
           </button>
           <h1 className="text-lg font-semibold text-gray-900">
-            {step === 'capture' ? 'Add Photo' : 'Report Details'}
+            {step === 'capture' ? 'Add Photo / Video' : 'Report Details'}
           </h1>
         </div>
 
@@ -274,15 +291,15 @@ export function ReportPage() {
             </div>
 
             {/* Upload button */}
-            <ImageUploader onSelect={handleFileSelect} />
+            <ImageUploader onSelect={handleFileSelect} onError={setError} />
 
             {/* Preview */}
             {imagePreview.length > 0 && (
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-gray-700">
-                  Selected Images ({imagePreview.length}/5)
+                  Selected ({imagePreview.length}/5)
                 </h3>
-                <ImagePreview images={imagePreview} onRemove={handleRemoveImage} />
+                <ImagePreview images={imagePreview} files={imageFiles} onRemove={handleRemoveImage} />
               </div>
             )}
 

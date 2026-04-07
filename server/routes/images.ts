@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import { analyzeImageForReport } from '../services/vision.js';
+import { analyzeMediaForReport } from '../services/vision.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -31,22 +31,24 @@ const storage = multer.diskStorage({
   }
 });
 
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'];
+
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 50 * 1024 * 1024 // 50MB limit (covers videos up to ~10s)
   },
   fileFilter: (_req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
+    if ([...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed.'));
+      cb(new Error('Invalid file type. Allowed: JPEG, PNG, GIF, WebP images and MP4, MOV, WebM videos.'));
     }
   }
 });
 
-// Upload single or multiple images
+// Upload single or multiple images/videos
 router.post('/upload', upload.array('images', 5), (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
@@ -59,12 +61,12 @@ router.post('/upload', upload.array('images', 5), (req: Request, res: Response) 
 
     res.json({ imageUrls });
   } catch (error) {
-    console.error('Error uploading images:', error);
-    res.status(500).json({ error: 'Failed to upload images' });
+    console.error('Error uploading files:', error);
+    res.status(500).json({ error: 'Failed to upload files' });
   }
 });
 
-// Analyze an uploaded image with AI to suggest title, description, and category
+// Analyze an uploaded image or video with AI to suggest title, description, and category
 router.post('/analyze', async (req: Request, res: Response) => {
   const { imageUrl } = req.body;
 
@@ -78,11 +80,11 @@ router.post('/analyze', async (req: Request, res: Response) => {
       ? `http://localhost:${port}${imageUrl}`
       : imageUrl;
 
-    const analysis = await analyzeImageForReport(absoluteUrl);
+    const analysis = await analyzeMediaForReport(absoluteUrl);
     res.json(analysis);
   } catch (error) {
-    console.error('Image analysis error:', error);
-    res.status(500).json({ error: 'Failed to analyze image' });
+    console.error('Media analysis error:', error);
+    res.status(500).json({ error: 'Failed to analyze file' });
   }
 });
 
@@ -90,7 +92,7 @@ router.post('/analyze', async (req: Request, res: Response) => {
 router.use((err: Error, _req: Request, res: Response, _next: Function) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large. Maximum size is 10MB.' });
+      return res.status(400).json({ error: 'File too large. Images max 10MB, videos max 50MB.' });
     }
     return res.status(400).json({ error: err.message });
   }

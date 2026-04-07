@@ -1,5 +1,18 @@
 import dotenv from 'dotenv';
+import path from 'path';
+import os from 'os';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegStatic from 'ffmpeg-static';
+
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Point fluent-ffmpeg at the bundled binary
+if (ffmpegStatic) ffmpeg.setFfmpegPath(ffmpegStatic as string);
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
@@ -21,17 +34,69 @@ export interface ImageAnalysis {
   isNewCategory: boolean;
 }
 
-async function fetchImageAsBase64(imageUrl: string): Promise<{ base64: string; mimeType: string }> {
-  // Handle relative URLs (local uploads like /uploads/...)
-  const fullUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:${process.env.SERVER_PORT || 5002}${imageUrl}`;
-  const imgResponse = await fetch(fullUrl);
-  if (!imgResponse.ok) throw new Error(`Failed to fetch image: ${imgResponse.statusText}`);
-  const buffer = await imgResponse.arrayBuffer();
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const VIDEO_EXTS = new Set(['.mp4', '.mov', '.webm', '.avi', '.m4v', '.qt']);
+
+function isVideoUrl(url: string): boolean {
+  const ext = path.extname(url.split('?')[0]).toLowerCase();
+  return VIDEO_EXTS.has(ext);
+}
+
+/** Convert a localhost upload URL → absolute local file path */
+function urlToLocalPath(url: string): string {
+  const uploadsDir = process.env.NODE_ENV === 'production'
+    ? '/home/uploads'
+    : path.resolve(path.join(__dirname, '../../uploads'));
+  const filename = path.basename(new URL(url).pathname);
+  return path.join(uploadsDir, filename);
+}
+
+/** Extract a single frame from a video file, returns base64 JPEG */
+async function extractVideoFrame(videoPath: string): Promise<{ base64: string; mimeType: string }> {
+  const tmpDir = os.tmpdir();
+  const frameName = `snap_frame_${Date.now()}.jpg`;
+  const framePath = path.join(tmpDir, frameName);
+
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg(videoPath)
+      .screenshots({
+        timestamps: ['00:00:01'],
+        filename: frameName,
+        folder: tmpDir,
+        size: '640x?',
+      })
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err));
+  });
+
+  const frameBuffer = await fs.readFile(framePath);
+  await fs.unlink(framePath).catch(() => {});
+
+  return { base64: frameBuffer.toString('base64'), mimeType: 'image/jpeg' };
+}
+
+/** Fetch an image or video (extracts a frame for video) and return base64 */
+async function fetchMediaAsBase64(mediaUrl: string): Promise<{ base64: string; mimeType: string }> {
+  const fullUrl = mediaUrl.startsWith('http')
+    ? mediaUrl
+    : `http://localhost:${process.env.SERVER_PORT || 5002}${mediaUrl}`;
+
+  if (isVideoUrl(fullUrl)) {
+    const localPath = urlToLocalPath(fullUrl);
+    return extractVideoFrame(localPath);
+  }
+
+  const response = await fetch(fullUrl);
+  if (!response.ok) throw new Error(`Failed to fetch media: ${response.statusText}`);
+  const buffer = await response.arrayBuffer();
   return {
     base64: Buffer.from(buffer).toString('base64'),
-    mimeType: imgResponse.headers.get('content-type') || 'image/jpeg',
+    mimeType: response.headers.get('content-type') || 'image/jpeg',
   };
 }
+
+// ── Public functions ──────────────────────────────────────────────────────────
 
 export async function analyzeIncidentForAdmin(
   imageUrls: string[],
@@ -41,7 +106,7 @@ export async function analyzeIncidentForAdmin(
 
   const imageContents = await Promise.all(
     imageUrls.slice(0, 3).map(async (url) => {
-      const { base64, mimeType } = await fetchImageAsBase64(url);
+      const { base64, mimeType } = await fetchMediaAsBase64(url);
       return { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'low' } };
     })
   );
@@ -105,18 +170,15 @@ Be specific, actionable, and professional.`,
   };
 }
 
-export async function analyzeImageForReport(imageUrl: string): Promise<ImageAnalysis> {
+/** Kept for backward-compat with existing import in images.ts */
+export const analyzeImageForReport = analyzeMediaForReport;
+
+export async function analyzeMediaForReport(mediaUrl: string): Promise<ImageAnalysis> {
   if (!OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured');
   }
 
-  const imgResponse = await fetch(imageUrl);
-  if (!imgResponse.ok) {
-    throw new Error(`Failed to fetch image: ${imgResponse.statusText}`);
-  }
-  const buffer = await imgResponse.arrayBuffer();
-  const base64 = Buffer.from(buffer).toString('base64');
-  const mimeType = imgResponse.headers.get('content-type') || 'image/jpeg';
+  const { base64, mimeType } = await fetchMediaAsBase64(mediaUrl);
 
   const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
