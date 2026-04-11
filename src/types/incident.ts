@@ -35,6 +35,8 @@ export interface Incident {
   resolutionNotes?: string;
   resolutionEvidence?: string;
   verificationCount?: number;
+  locationVerification?: 'yes' | 'no' | 'uncertain' | null;
+  locationVerificationReason?: string | null;
 }
 
 export interface IncidentStats {

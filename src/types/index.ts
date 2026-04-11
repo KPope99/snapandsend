@@ -80,6 +80,8 @@ export interface CreateReportData {
   imageUrls: string[];
   userId?: string;
   sessionId?: string;
+  locationVerification?: string;
+  locationVerificationReason?: string;
 }
 
 export interface Location {

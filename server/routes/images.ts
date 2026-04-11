@@ -4,7 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-import { analyzeMediaForReport } from '../services/vision.js';
+import { analyzeMediaForReport, verifyLocationMatch } from '../services/vision.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -85,6 +85,28 @@ router.post('/analyze', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Media analysis error:', error);
     res.status(500).json({ error: 'Failed to analyze file' });
+  }
+});
+
+// Verify that an uploaded image matches a specified location
+router.post('/verify-location', async (req: Request, res: Response) => {
+  const { imageUrl, location } = req.body;
+
+  if (!imageUrl || !location) {
+    return res.status(400).json({ error: 'imageUrl and location are required' });
+  }
+
+  try {
+    const port = process.env.SERVER_PORT || 5002;
+    const absoluteUrl = imageUrl.startsWith('/')
+      ? `http://localhost:${port}${imageUrl}`
+      : imageUrl;
+
+    const result = await verifyLocationMatch(absoluteUrl, location);
+    res.json(result);
+  } catch (error) {
+    console.error('Location verification error:', error);
+    res.status(500).json({ error: 'Failed to verify location' });
   }
 });
 

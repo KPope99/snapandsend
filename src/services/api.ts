@@ -209,6 +209,25 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysis> {
   return response.json();
 }
 
+export interface LocationVerification {
+  match: 'yes' | 'no' | 'uncertain';
+  reason: string;
+}
+
+export async function verifyLocationMatch(imageUrl: string, location: string): Promise<LocationVerification> {
+  const response = await fetch(`${API_BASE}/images/verify-location`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl, location }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to verify location');
+  }
+
+  return response.json();
+}
+
 // Location
 export async function reverseGeocode(lat: number, lng: number): Promise<{ address: string }> {
   const response = await fetch(`${API_BASE}/location/reverse?lat=${lat}&lng=${lng}`);

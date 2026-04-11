@@ -34,9 +34,26 @@ export function IncidentCard({ incident }: IncidentCardProps) {
     >
       <div className="flex items-start justify-between mb-2">
         <h3 className="font-semibold text-gray-900 line-clamp-1">{incident.title}</h3>
-        <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[incident.status]}`}>
-          {statusLabels[incident.status]}
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {(incident.locationVerification === 'no' || incident.locationVerification === 'uncertain') && (
+            <span
+              className={`flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
+                incident.locationVerification === 'no'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-amber-100 text-amber-700'
+              }`}
+              title={incident.locationVerificationReason || 'Location not verified'}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              {incident.locationVerification === 'no' ? 'Location mismatch' : 'Location unverified'}
+            </span>
+          )}
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[incident.status]}`}>
+            {statusLabels[incident.status]}
+          </span>
+        </div>
       </div>
       <p className="text-sm text-gray-600 mb-3 line-clamp-2">{incident.description}</p>
       <div className="flex items-center gap-4 text-xs text-gray-500">

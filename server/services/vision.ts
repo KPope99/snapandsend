@@ -170,6 +170,73 @@ Be specific, actionable, and professional.`,
   };
 }
 
+export interface LocationVerification {
+  match: 'yes' | 'no' | 'uncertain';
+  reason: string;
+}
+
+export async function verifyLocationMatch(
+  mediaUrl: string,
+  location: string
+): Promise<LocationVerification> {
+  if (!OPENAI_API_KEY) throw new Error('OpenAI API key not configured');
+
+  const { base64, mimeType } = await fetchMediaAsBase64(mediaUrl);
+
+  const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a location verification assistant for a community incident reporting app.
+Your job is to check whether a photo or video frame is plausibly taken at or near a specified location.
+
+Consider:
+- Visible landmarks, street signs, infrastructure, or scenery that match or contradict the location
+- Environmental context (urban/rural, climate, building styles)
+- Any text visible in the image (street names, shop signs, licence plates)
+
+Return JSON with exactly these fields:
+- match: "yes" if the image is consistent with the location, "no" if it clearly contradicts it, "uncertain" if you cannot tell
+- reason: One sentence explaining your assessment`,
+        },
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: `Specified location: "${location}"\n\nDoes this image appear to be taken at or near that location?` },
+            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}`, detail: 'low' } },
+          ],
+        },
+      ],
+      max_tokens: 150,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const err = await aiResponse.text();
+    console.error('OpenAI location verification error:', err);
+    throw new Error('Location verification failed');
+  }
+
+  const data = await aiResponse.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (!content) throw new Error('No verification content returned');
+
+  const parsed = JSON.parse(content);
+  const validMatches = ['yes', 'no', 'uncertain'];
+  return {
+    match: validMatches.includes(parsed.match) ? parsed.match : 'uncertain',
+    reason: parsed.reason || '',
+  };
+}
+
 /** Kept for backward-compat with existing import in images.ts */
 export const analyzeImageForReport = analyzeMediaForReport;
 

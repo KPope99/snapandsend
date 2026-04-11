@@ -103,7 +103,9 @@ router.post('/', async (req: Request, res: Response) => {
       address,
       imageUrls,
       userId,
-      sessionId
+      sessionId,
+      locationVerification,
+      locationVerificationReason
     } = req.body;
 
     if (!title || !description || !category || latitude === undefined || longitude === undefined) {
@@ -230,6 +232,8 @@ router.post('/', async (req: Request, res: Response) => {
         address,
         userId: userId || null,
         sessionId: sessionId || null,
+        locationVerification: locationVerification || null,
+        locationVerificationReason: locationVerificationReason || null,
         images: {
           create: imageUrls.map((url: string) => ({ imageUrl: url }))
         }

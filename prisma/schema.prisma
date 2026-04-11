@@ -47,6 +47,8 @@ model Report {
   resolvedAt       DateTime?
   resolutionNotes  String?
   resolutionEvidence String?
+  locationVerification String?       // 'yes' | 'no' | 'uncertain'
+  locationVerificationReason String?
 
   @@index([latitude, longitude])
   @@index([status])

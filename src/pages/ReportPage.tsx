@@ -8,7 +8,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { useLocation } from '../context/LocationContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadImages, createReport, reverseGeocode, analyzeImage, ImageAnalysis } from '../services/api';
+import { uploadImages, createReport, reverseGeocode, analyzeImage, ImageAnalysis, verifyLocationMatch, LocationVerification } from '../services/api';
 import { ReportCategory } from '../types';
 
 type Step = 'capture' | 'form';
@@ -27,6 +27,8 @@ export function ReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<ImageAnalysis | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [locationVerification, setLocationVerification] = useState<LocationVerification | null>(null);
   // Cache uploaded URLs to avoid re-uploading on submit
   const uploadedUrlsCache = useRef<Map<File, string>>(new Map());
 
@@ -116,7 +118,7 @@ export function ReportPage() {
     });
   }, []);
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (imagePreview.length === 0) {
       setError('Please add at least one photo or video');
       return;
@@ -140,6 +142,26 @@ export function ReportPage() {
     }
 
     setError(null);
+
+    // Verify the first uploaded image matches the specified location
+    const firstUploadedUrl = imageFiles.length > 0 ? uploadedUrlsCache.current.get(imageFiles[0]) : null;
+    const locationLabel = locationMode === 'gps'
+      ? (location?.address || (location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : null))
+      : manualAddress.trim();
+
+    if (firstUploadedUrl && locationLabel) {
+      setIsVerifying(true);
+      setLocationVerification(null);
+      try {
+        const result = await verifyLocationMatch(firstUploadedUrl, locationLabel);
+        setLocationVerification(result);
+      } catch {
+        // Verification is non-blocking — proceed silently on error
+      } finally {
+        setIsVerifying(false);
+      }
+    }
+
     setStep('form');
   };
 
@@ -203,7 +225,9 @@ export function ReportPage() {
         address: finalAddress,
         imageUrls,
         userId: user?.id,
-        sessionId: sessionId || undefined
+        sessionId: sessionId || undefined,
+        locationVerification: locationVerification?.match ?? undefined,
+        locationVerificationReason: locationVerification?.reason ?? undefined
       });
 
       // Navigate with merge status
@@ -443,6 +467,60 @@ export function ReportPage() {
                 </button>
               </div>
             </div>
+
+            {/* Location verification banner */}
+            {isVerifying && (
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+                <svg className="w-4 h-4 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                <span className="text-xs text-gray-500">Verifying photo matches location...</span>
+              </div>
+            )}
+            {!isVerifying && locationVerification && (
+              <div className={`flex items-start gap-2 rounded-lg px-3 py-2 border ${
+                locationVerification.match === 'yes'
+                  ? 'bg-emerald-50 border-emerald-200'
+                  : locationVerification.match === 'no'
+                  ? 'bg-red-50 border-red-200'
+                  : 'bg-amber-50 border-amber-200'
+              }`}>
+                {locationVerification.match === 'yes' && (
+                  <svg className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {locationVerification.match === 'no' && (
+                  <svg className="w-4 h-4 text-red-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+                {locationVerification.match === 'uncertain' && (
+                  <svg className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+                <div>
+                  <p className={`text-xs font-medium ${
+                    locationVerification.match === 'yes' ? 'text-emerald-700'
+                    : locationVerification.match === 'no' ? 'text-red-700'
+                    : 'text-amber-700'
+                  }`}>
+                    {locationVerification.match === 'yes' && 'Photo matches location'}
+                    {locationVerification.match === 'no' && 'Photo may not match location'}
+                    {locationVerification.match === 'uncertain' && 'Location could not be confirmed'}
+                  </p>
+                  <p className={`text-xs mt-0.5 ${
+                    locationVerification.match === 'yes' ? 'text-emerald-600'
+                    : locationVerification.match === 'no' ? 'text-red-600'
+                    : 'text-amber-600'
+                  }`}>
+                    {locationVerification.reason}
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Form */}
             <ReportForm

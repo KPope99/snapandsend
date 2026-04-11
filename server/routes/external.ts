@@ -142,7 +142,9 @@ router.get('/incidents', async (req: Request, res: Response) => {
       investigatingAt: incident.investigatingAt,
       resolvedAt: incident.resolvedAt,
       resolutionNotes: incident.resolutionNotes,
-      resolutionEvidence: incident.resolutionEvidence
+      resolutionEvidence: incident.resolutionEvidence,
+      locationVerification: incident.locationVerification,
+      locationVerificationReason: incident.locationVerificationReason
     }));
 
     res.json({
@@ -234,7 +236,9 @@ router.get('/incidents/:id', async (req: Request, res: Response) => {
         investigatingAt: incident.investigatingAt,
         resolvedAt: incident.resolvedAt,
         resolutionNotes: incident.resolutionNotes,
-        resolutionEvidence: incident.resolutionEvidence
+        resolutionEvidence: incident.resolutionEvidence,
+        locationVerification: incident.locationVerification,
+        locationVerificationReason: incident.locationVerificationReason
       }
     });
   } catch (error) {

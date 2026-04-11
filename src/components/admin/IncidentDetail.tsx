@@ -228,6 +228,31 @@ export function IncidentDetail({ incident, onStatusChange, onDelete }: IncidentD
         </div>
       </div>
 
+      {/* Location verification flag */}
+      {(incident.locationVerification === 'no' || incident.locationVerification === 'uncertain') && (
+        <div className={`px-6 py-3 border-b flex items-start gap-3 ${
+          incident.locationVerification === 'no'
+            ? 'bg-red-50 border-red-200'
+            : 'bg-amber-50 border-amber-200'
+        }`}>
+          <svg className={`w-5 h-5 mt-0.5 shrink-0 ${incident.locationVerification === 'no' ? 'text-red-500' : 'text-amber-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <div>
+            <p className={`text-sm font-semibold ${incident.locationVerification === 'no' ? 'text-red-700' : 'text-amber-700'}`}>
+              {incident.locationVerification === 'no'
+                ? 'Location mismatch flagged — photo may not match the reported location'
+                : 'Location unverified — photo could not be confirmed at the reported location'}
+            </p>
+            {incident.locationVerificationReason && (
+              <p className={`text-sm mt-0.5 ${incident.locationVerification === 'no' ? 'text-red-600' : 'text-amber-600'}`}>
+                {incident.locationVerificationReason}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Description & Photos */}
       <div className="p-6 border-b border-gray-200">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
