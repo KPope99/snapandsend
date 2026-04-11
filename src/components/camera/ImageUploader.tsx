@@ -13,11 +13,22 @@ function getVideoDuration(file: File): Promise<number> {
     const video = document.createElement('video');
     video.preload = 'metadata';
     const url = URL.createObjectURL(file);
+
+    // Timeout fallback — some mobile browsers never fire onloadedmetadata/onerror
+    // for certain video codecs (e.g. MOV on Android Chrome). Accept the file if
+    // we can't determine duration within 5 seconds.
+    const timer = setTimeout(() => {
+      URL.revokeObjectURL(url);
+      resolve(0);
+    }, 5000);
+
     video.onloadedmetadata = () => {
+      clearTimeout(timer);
       URL.revokeObjectURL(url);
       resolve(video.duration);
     };
     video.onerror = () => {
+      clearTimeout(timer);
       URL.revokeObjectURL(url);
       resolve(0);
     };

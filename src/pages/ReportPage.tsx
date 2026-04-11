@@ -54,13 +54,22 @@ export function ReportPage() {
     setAiSuggestions(null);
 
     fetch('/api/images/upload', { method: 'POST', body: formData })
-      .then(r => r.json())
+      .then(async r => {
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.error || 'Upload failed');
+        return data;
+      })
       .then(data => {
         uploadedUrlsCache.current.set(file, data.imageUrls[0]);
         return analyzeImage(data.imageUrls[0]);
       })
       .then(analysis => setAiSuggestions(analysis))
-      .catch(() => { /* analysis is optional, ignore errors */ })
+      .catch(err => {
+        // Show upload errors; swallow analysis errors (analysis is optional)
+        if (err?.message?.includes('file type') || err?.message?.includes('too large')) {
+          setError(err.message);
+        }
+      })
       .finally(() => setIsAnalyzing(false));
   }, []);
 
@@ -98,6 +107,11 @@ export function ReportPage() {
         const reader = new FileReader();
         reader.onload = () => {
           previews[i] = reader.result as string;
+          trySetState();
+        };
+        reader.onerror = () => {
+          // Use a blob URL as fallback so the slot is still counted
+          previews[i] = URL.createObjectURL(file);
           trySetState();
         };
         reader.readAsDataURL(file);
