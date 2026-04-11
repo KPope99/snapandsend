@@ -142,8 +142,9 @@ export function ReportPage() {
     }
 
     setError(null);
+    setStep('form'); // Navigate immediately — don't block on verification
 
-    // Verify the first uploaded image matches the specified location
+    // Run verification in the background; result appears as a banner in the form step
     const firstUploadedUrl = imageFiles.length > 0 ? uploadedUrlsCache.current.get(imageFiles[0]) : null;
     const locationLabel = locationMode === 'gps'
       ? (location?.address || (location ? `${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)}` : null))
@@ -152,17 +153,11 @@ export function ReportPage() {
     if (firstUploadedUrl && locationLabel) {
       setIsVerifying(true);
       setLocationVerification(null);
-      try {
-        const result = await verifyLocationMatch(firstUploadedUrl, locationLabel);
-        setLocationVerification(result);
-      } catch {
-        // Verification is non-blocking — proceed silently on error
-      } finally {
-        setIsVerifying(false);
-      }
+      verifyLocationMatch(firstUploadedUrl, locationLabel)
+        .then(result => setLocationVerification(result))
+        .catch(() => { /* non-blocking */ })
+        .finally(() => setIsVerifying(false));
     }
-
-    setStep('form');
   };
 
   const handleSubmit = async (data: { title: string; description: string; category: ReportCategory }) => {
