@@ -43,11 +43,16 @@ export function ImageUploader({ onSelect, onError, multiple = true }: ImageUploa
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    // Snapshot the FileList into a plain array BEFORE resetting the input.
+    // On iOS Safari, setting input.value = '' can clear the live FileList
+    // reference, making Array.from(files) return [] if called after the reset.
+    const fileArray = Array.from(files);
+
     // Reset input so the same file can be re-selected if needed
     if (inputRef.current) inputRef.current.value = '';
 
     const valid: File[] = [];
-    for (const file of Array.from(files)) {
+    for (const file of fileArray) {
       if (file.type.startsWith('video/')) {
         const duration = await getVideoDuration(file);
         if (duration > MAX_VIDEO_DURATION_SECS) {
