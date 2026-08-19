@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 
 const router = Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'snapandsend-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 interface StaffRequest extends Request {
   staffId?: string;

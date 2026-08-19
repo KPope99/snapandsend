@@ -6,6 +6,13 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Fail fast if JWT_SECRET is missing or still set to the insecure default.
+const JWT_SECRET_CHECK = process.env.JWT_SECRET;
+if (!JWT_SECRET_CHECK || JWT_SECRET_CHECK === 'snapandsend-secret-key') {
+  console.error('FATAL: JWT_SECRET is not set or is using the insecure default. Set a strong secret.');
+  process.exit(1);
+}
+
 import reportsRouter from './routes/reports.js';
 import imagesRouter from './routes/images.js';
 import authRouter from './routes/auth.js';

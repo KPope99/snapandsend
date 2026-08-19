@@ -22,13 +22,18 @@ async function main() {
     console.log('API partner already exists.');
   }
 
-  // Seed admin staff account
-  const adminEmail = process.env.ADMIN_EMAIL || 'olu.oshaa@gmail.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'SnapAdmin2024!';
+  // Seed (or sync) the admin staff account. Password is synced from the
+  // ADMIN_PASSWORD env var on every startup, not just on first creation, so
+  // rotating the env var and redeploying actually takes effect.
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !adminPassword) {
+    throw new Error('ADMIN_EMAIL and ADMIN_PASSWORD must both be set.');
+  }
 
+  const hashed = await bcrypt.hash(adminPassword, 10);
   const existingAdmin = await prisma.staffMember.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
-    const hashed = await bcrypt.hash(adminPassword, 10);
     await prisma.staffMember.create({
       data: {
         name: 'System Admin',
@@ -40,7 +45,8 @@ async function main() {
     });
     console.log(`Admin staff account created: ${adminEmail}`);
   } else {
-    console.log('Admin staff account already exists.');
+    await prisma.staffMember.update({ where: { email: adminEmail }, data: { password: hashed } });
+    console.log(`Admin staff account password synced: ${adminEmail}`);
   }
 }
 

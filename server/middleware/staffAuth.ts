@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'snapandsend-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 export interface StaffRequest extends Request {
   staffId?: string;

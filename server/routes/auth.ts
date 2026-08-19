@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 const prisma = new PrismaClient();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'snapandsend-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
 // Get or create anonymous session
 router.get('/session', (_req: Request, res: Response) => {
