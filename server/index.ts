@@ -21,6 +21,7 @@ import externalRouter from './routes/external.js';
 import analysisRouter from './routes/analysis.js';
 import staffRouter from './routes/staff.js';
 import pagesRouter from './routes/pages.js';
+import dataExportRouter from './routes/data-export.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +55,10 @@ app.use('/api/staff', staffRouter);
 
 // CMS page content
 app.use('/api/pages', pagesRouter);
+
+// TEMPORARY: one-off admin data export for the Azure -> GCP infra migration.
+// Remove this route once the migration is complete.
+app.use('/api/data-export', dataExportRouter);
 
 // Health check
 app.get('/api/health', (_req, res) => {
